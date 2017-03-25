@@ -1,0 +1,83 @@
+---
+title: "Airbnb en Donostia y Euskadi"
+author: "montera34"
+date: "March 25, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE, cache = TRUE}
+
+#library("tidyverse")
+#importa datos
+listings = read.csv("data/listings.csv")
+
+#view data basics
+str(listings)
+head(listings)
+#añade variables para acceso fácil
+attach(listings)
+summary(listings)
+
+#municipios
+citieslevels = levels(city)
+cities = data.frame(citieslevels) #eran 330 y tras limpieza  270
+ncities = nrow(cities) #número de municipios diferentes
+
+propertytype = data.frame(levels(property_type))
+roomtype = data.frame(levels(room_type))
+
+#listadospor capitales
+donostia = listings[city=="Donostia",] #eran 799 y tras limpieza  1215
+bilbao = listings[city=="Bilbao",]
+vitoria = listings[city=="Vitoria-Gasteiz",]
+
+#número de pisos en las capitales
+ntotal = nrow(listings) #numero de pisos
+ndonostia = nrow(donostia)
+nbilbao = nrow(bilbao)
+nvitoria = nrow(vitoria)
+
+#pisos con licencia
+ntotallicencia = nrow(listings[license!= "",])
+ndonostialicencia = nrow(listings[license!= ""&city=="Donostia",])
+nbilbaolicencia = nrow(listings[license!= ""&city=="Bilbao",])
+nvitorialicencia = nrow(listings[license!= ""&city=="Vitoria-Gasteiz",])
+#ndonostialicencia = nrow(donostia[donostia$license!= "",]) # dan mismo resultado
+
+# % pisos con licencia
+totalLicenciaPerCent = ntotallicencia / ntotal
+donostiaLicenciaPerCent = ndonostialicencia / ndonostia
+bilbaoLicenciaPerCent = nbilbaolicencia / nbilbao
+vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
+```
+
+#Qué datos tenemos
+La base de datos para Euskadi de Inside Airbnb contiene `r ntotal` alojamientos en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
+
+De ellos:
+
+ + Donostia - San Sebastián `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de ellos con licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ + Bilbao `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de ellos con licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ + Vitoria-Gasteiz `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de ellos con licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+
+
+
+## Número de dormitorios y tipo de alojamiento
+```{r, echo = FALSE, warning=FALSE}
+ggplot(data = listings) + 
+  geom_point(mapping = aes(x = property_type, y = bedrooms, color = availability_365),  position = "jitter") + coord_flip()
+```
+
+## Número de dormitorios y tipo de oferta
+```{r, echo = FALSE, warning=FALSE}
+ggplot(data = listings) + 
+  geom_point(mapping = aes(x = room_type, y = minimum_nights, color = availability_365 ),  position = "jitter")  + coord_flip()
+```
+
+## Número de dormitorios y tipo de oferta en Donosti
+```{r, echo = FALSE, warning=FALSE}
+ggplot(data = donostia) + 
+  geom_point(mapping = aes(x = room_type, y = bedrooms, color = availability_365 ),  position = "jitter")  + coord_flip()
+```
+
+
