@@ -26,6 +26,10 @@ head(listings)
 attach(listings)
 summary(listings)
 
+#creates variable True/false license
+listings$withlicense <- listings$license!=""
+#listings[,c(88,96)]
+
 #municipios
 citieslevels = levels(city)
 cities = data.frame(citieslevels) #eran 330 y tras limpieza  270
@@ -55,6 +59,8 @@ ndonostialicencia = nrow(listings[license!= ""&city=="Donostia",])
 nbilbaolicencia = nrow(listings[license!= ""&city=="Bilbao",])
 nvitorialicencia = nrow(listings[license!= ""&city=="Vitoria-Gasteiz",])
 #ndonostialicencia = nrow(donostia[donostia$license!= "",]) # dan mismo resultado
+
+#donostialicencia = listings[license!= ""&city=="Donostia",]
 
 #nmadridlicencia = nrow(listings_madrid[listings_madrid$license!= "",88])
 nbarcelonalicencia = nrow(listings_barcelona[listings_barcelona$license!= "",])
@@ -105,14 +111,24 @@ ggplot(data = donostia) +
 
 
 ```{r, echo = FALSE, warning=FALSE}
-ggplot(donostia) +   geom_bar(mapping = aes(x = bedrooms))
+ggplot(donostia) +   geom_bar(mapping = aes(x = bedrooms)) + labs(title= "Donostia" )
+ggplot(donostialicencia) +   geom_bar(mapping = aes(x = bedrooms)) + labs(title= "Donostia con licencia" ) #cambiar por variable withlicense
 
 ggplot(donostia) +   geom_bar(mapping = aes(x = host_name)) #necesita reordenar
-           
+
 ggplot(donostia) + geom_bar(mapping = aes(x = host_listings_count))
 ggplot(donostia) + geom_bar(mapping = aes(x = host_total_listings_count))
 
-ggplot(donostia) + geom_bar(mapping = aes(x = property_type)) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia" )
+ggplot(donostialicencia) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia con licencia" ) #cambiar por variable withlicense
+
+ggplot(data = donostia) + 
+  stat_summary(
+    mapping = aes(x = property_type, y = bedrooms),
+    fun.ymin = min,
+    fun.ymax = max,
+    fun.y = median
+  )
 
 ggplot(donostia) + geom_bar(mapping = aes(x = room_type)) + coord_flip()
 
@@ -130,8 +146,23 @@ ggplot(donostia) + geom_bar(mapping = aes(x = require_guest_phone_verification )
 ggplot(donostia) + geom_bar(mapping = aes(x = calculated_host_listings_count )) + coord_flip()
 ggplot(donostia) + geom_bar(mapping = aes(x = reviews_per_month )) + coord_flip()
 
+#scatter plots
 
+ggplot(donostia) + geom_point(mapping = aes(x = beds, y = reviews_per_month), position = "jitter")
+ggplot(donostia) + geom_point(mapping = aes(x = cancellation_policy, y = reviews_per_month, shape = property_type, color = property_type), position = "jitter")
+ggplot(donostia) + geom_point(mapping = aes(x = beds, y = calculated_host_listings_count, shape = property_type, color = withlicense), position = "jitter")
 
+ggplot(listings) + 
+  geom_point(mapping = aes(x = property_type, y = review_scores_rating)) + 
+  facet_wrap(~ withlicense, ncol= 2) + coord_flip()
 
+ggplot(listings) + 
+  stat_summary(
+    mapping = aes(x = property_type, y = number_of_reviews),
+    fun.ymin = min,
+    fun.ymax = max,
+    fun.y = median
+  ) + coord_flip() +
+  facet_wrap(~ withlicense, nrow = 2)
 ```
 
