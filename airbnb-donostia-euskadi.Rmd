@@ -7,9 +7,14 @@ output: html_document
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-#library("tidyverse")
+library("tidyverse")
 #importa datos
-listings = read.csv("data/listings.csv")
+listings = read.csv("data/listings_euskadi.csv")
+
+#otras ciudades
+#listings_madrid = read.csv("data/listings_madrid.csv")
+listings_barcelona = read.csv("data/listings_barcelona.csv")
+#listings_mallorca = read.csv("data/listings_mallorca.csv")
 
 #view data basics
 str(listings)
@@ -26,7 +31,7 @@ ncities = nrow(cities) #número de municipios diferentes
 propertytype = data.frame(levels(property_type))
 roomtype = data.frame(levels(room_type))
 
-#listadospor capitales
+#listados por capitales
 donostia = listings[city=="Donostia",] #eran 799 y tras limpieza  1215
 bilbao = listings[city=="Bilbao",]
 vitoria = listings[city=="Vitoria-Gasteiz",]
@@ -37,6 +42,10 @@ ndonostia = nrow(donostia)
 nbilbao = nrow(bilbao)
 nvitoria = nrow(vitoria)
 
+#nmadrid = nrow(listings_madrid)
+nbarcelona = nrow(listings_barcelona)
+#nmallorca = nrow(listings_mallorca)
+
 #pisos con licencia
 ntotallicencia = nrow(listings[license!= "",])
 ndonostialicencia = nrow(listings[license!= ""&city=="Donostia",])
@@ -44,15 +53,25 @@ nbilbaolicencia = nrow(listings[license!= ""&city=="Bilbao",])
 nvitorialicencia = nrow(listings[license!= ""&city=="Vitoria-Gasteiz",])
 #ndonostialicencia = nrow(donostia[donostia$license!= "",]) # dan mismo resultado
 
+#nmadridlicencia = nrow(listings_madrid[listings_madrid$license!= "",88])
+nbarcelonalicencia = nrow(listings_barcelona[listings_barcelona$license!= "",])
+#nmallorcalicencia = nrow(listings_mallorca[listings_mallorca$license!= "",])
+
 # % pisos con licencia
 totalLicenciaPerCent = ntotallicencia / ntotal
 donostiaLicenciaPerCent = ndonostialicencia / ndonostia
 bilbaoLicenciaPerCent = nbilbaolicencia / nbilbao
 vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
+
+#madridLicenciaPerCent = nmadridlicencia / nmadrid
+barcelonaLicenciaPerCent = nbarcelonalicencia / nbarcelona
+#mallorcaLicenciaPerCent = nmallorcalicencia / nmallorca
 ```
 
 #Qué datos tenemos
 La base de datos para Euskadi de Inside Airbnb contiene `r ntotal` alojamientos en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
+
+Por comparar, en otras ciudades, el porcentaje de alojamientos con licencia es Barcelona (`r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)` de un total de `r nbarcelona`,%), Madrid  (0%) y Mallorca (0%)
 
 De ellos:
 
