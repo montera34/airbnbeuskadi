@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE, cache = TRUE}
 
 library("tidyverse")
+#carga librería para reagrupar tablas de datos y hacer "melt"
+library("reshape2") #no sé la diferencia con "reshape"
+
 #importa datos
 listings = read.csv("data/listings_euskadi.csv")
 
@@ -96,7 +99,39 @@ ggplot(data = listings) +
 ## Número de dormitorios y tipo de oferta en Donosti
 ```{r, echo = FALSE, warning=FALSE}
 ggplot(data = donostia) + 
-  geom_point(mapping = aes(x = room_type, y = bedrooms, color = availability_365 ),  position = "jitter")  + coord_flip()
+  geom_point(mapping = aes(x = room_type, y = bedrooms, color = minimum_nights ),  position = "jitter")  + coord_flip()
 ```
 
+
+
+```{r, echo = FALSE, warning=FALSE}
+ggplot(donostia) +   geom_bar(mapping = aes(x = bedrooms))
+
+ggplot(donostia) +   geom_bar(mapping = aes(x = host_name)) #necesita reordenar
+           
+ggplot(donostia) + geom_bar(mapping = aes(x = host_listings_count))
+ggplot(donostia) + geom_bar(mapping = aes(x = host_total_listings_count))
+
+ggplot(donostia) + geom_bar(mapping = aes(x = property_type)) + coord_flip()
+
+ggplot(donostia) + geom_bar(mapping = aes(x = room_type)) + coord_flip()
+
+ggplot(donostia) + geom_bar(mapping = aes(x = accommodates )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = bed_type )) + coord_flip()
+
+ggplot(donostia) + geom_bar(mapping = aes(x = number_of_reviews )) + coord_flip()
+
+ggplot(donostia) + geom_bar(mapping = aes(x = review_scores_value )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = instant_bookable )) + coord_flip()
+
+ggplot(donostia) + geom_bar(mapping = aes(x = require_guest_profile_picture )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = require_guest_phone_verification )) + coord_flip()
+
+ggplot(donostia) + geom_bar(mapping = aes(x = calculated_host_listings_count )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = reviews_per_month )) + coord_flip()
+
+
+
+
+```
 
