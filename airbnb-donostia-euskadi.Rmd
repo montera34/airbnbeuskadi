@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-library("tidyverse")
+#library("tidyverse")
 #carga librería para reagrupar tablas de datos y hacer "melt"
 library("reshape2") #no sé la diferencia con "reshape"
 
@@ -111,8 +111,14 @@ ggplot(data = donostia) +
 
 
 ```{r, echo = FALSE, warning=FALSE}
-ggplot(donostia) +   geom_bar(mapping = aes(x = bedrooms)) + labs(title= "Donostia" )
-ggplot(donostialicencia) +   geom_bar(mapping = aes(x = bedrooms)) + labs(title= "Donostia con licencia" ) #cambiar por variable withlicense
+ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia" )
+ggplot(donostia[donostia$withlicense==TRUE,]) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia con licencia")
+
+ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia" )+ 
+  facet_wrap(~ withlicense, ncol= 2) + coord_flip()
+
+ggplot(donostia) +  geom_bar(mapping = aes(x = beds, fill = withlicense))
+ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = beds))
 
 ggplot(donostia) +   geom_bar(mapping = aes(x = host_name)) #necesita reordenar
 
@@ -120,7 +126,7 @@ ggplot(donostia) + geom_bar(mapping = aes(x = host_listings_count))
 ggplot(donostia) + geom_bar(mapping = aes(x = host_total_listings_count))
 
 ggplot(donostia) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia" )
-ggplot(donostialicencia) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia con licencia" ) #cambiar por variable withlicense
+ggplot(donostia[donostia$withlicense==TRUE,]) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia con licencia" ) #cambiar por variable withlicense
 
 ggplot(data = donostia) + 
   stat_summary(
@@ -151,9 +157,10 @@ ggplot(donostia) + geom_bar(mapping = aes(x = reviews_per_month )) + coord_flip(
 ggplot(donostia) + geom_point(mapping = aes(x = beds, y = reviews_per_month), position = "jitter")
 ggplot(donostia) + geom_point(mapping = aes(x = cancellation_policy, y = reviews_per_month, shape = property_type, color = property_type), position = "jitter")
 ggplot(donostia) + geom_point(mapping = aes(x = beds, y = calculated_host_listings_count, shape = property_type, color = withlicense), position = "jitter")
+ggplot(listings) + geom_point(mapping = aes(x = beds, y = number_of_reviews, shape = property_type, color = withlicense), position = "jitter")
 
 ggplot(listings) + 
-  geom_point(mapping = aes(x = property_type, y = review_scores_rating)) + 
+  geom_point(mapping = aes(x = property_type, y = number_of_reviews)) + 
   facet_wrap(~ withlicense, ncol= 2) + coord_flip()
 
 ggplot(listings) + 
