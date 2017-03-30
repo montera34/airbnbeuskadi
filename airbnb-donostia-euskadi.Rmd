@@ -103,12 +103,10 @@ Por comparar, en otras ciudades, el porcentaje de alojamientos con licencia es B
 
 #Datos para Donostia - San Sebastián
 ```{r, echo = FALSE, warning=FALSE}
-#ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia" )
-#ggplot(donostia[donostia$withlicense==TRUE,]) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia con licencia")
 
-ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Número alojamientos según su nº de camas con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = accommodates)) + labs(title= "Número alojamientos según su plazas con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
 
-ggplot(donostia) +  geom_bar(mapping = aes(x = beds, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas (camas) con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
+ggplot(donostia) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
 
 ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
 ```
@@ -152,8 +150,6 @@ naccommodates <- donostia %>%
   summarize(sum.accomodates=sum(accommodates)) %>%
   #mutate(plazas=sum(accommodates)) %>%
 arrange(desc(sum.accomodates))
-
-kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
 ```
 
 Los **10** primeros usuarios (`r format(round(100*10/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:10,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:10,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
@@ -163,6 +159,11 @@ Los **20** primeros usuarios (`r format(round(100*20/length(levels(as.factor(don
 Los **50** primeros usuarios (`r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
 
 Los **100** primeros usuarios (`r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
+
+```{r, echo = FALSE, warning=FALSE}
+kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
+```
+
 
 ## Otros
 ```{r, echo = FALSE, warning=FALSE}
@@ -194,10 +195,10 @@ ggplot(donostia) + geom_bar(mapping = aes(x = calculated_host_listings_count )) 
 ggplot(donostia) + geom_bar(mapping = aes(x = reviews_per_month )) + coord_flip()
 
 #scatter plots
-ggplot(donostia) + geom_point(mapping = aes(x = beds, y = reviews_per_month), position = "jitter")
+ggplot(donostia) + geom_point(mapping = aes(x = accommodates, y = reviews_per_month), position = "jitter")
 ggplot(donostia) + geom_point(mapping = aes(x = cancellation_policy, y = reviews_per_month, shape = property_type, color = property_type), position = "jitter")
-ggplot(donostia) + geom_point(mapping = aes(x = beds, y = calculated_host_listings_count, shape = property_type, color = withlicense), position = "jitter")
-ggplot(listings) + geom_point(mapping = aes(x = beds, y = number_of_reviews, shape = property_type, color = withlicense), position = "jitter")
+ggplot(donostia) + geom_point(mapping = aes(x = accommodates, y = calculated_host_listings_count, shape = property_type, color = withlicense), position = "jitter")
+ggplot(listings) + geom_point(mapping = aes(x = accommodates, y = number_of_reviews, shape = property_type, color = withlicense), position = "jitter")
 
 ggplot(listings) + 
   geom_point(mapping = aes(x = property_type, y = number_of_reviews)) + 
