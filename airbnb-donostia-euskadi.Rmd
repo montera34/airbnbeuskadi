@@ -91,11 +91,11 @@ La base de datos de Euskadi de InsideAirbnb contiene `r ntotal` alojamientos en 
 
 En las capitales tenemos:
 
- + Donostia - San Sebastián `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
- + Bilbao `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio).
- + Vitoria-Gasteiz `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ + *Donostia - San Sebastián* `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(donostia$accommodates) ` plazas.
+ + Bilbao `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(bilbao$accommodates) ` plazas.
+ + Vitoria-Gasteiz `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(vitoria$accommodates) ` plazas.
 
-En Donostia existen `r length(levels(as.factor(donostia$host_id))) ` usuarios con alojamientos disponibles en Airbnb. 
+En Donostia existen `r length(levels(as.factor(donostia$host_id)))` usuarios con alojamientos disponibles en Airbnb. 
 
 
 Por comparar, en otras ciudades, el porcentaje de alojamientos con licencia es Barcelona (`r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos), Madrid (0%) y Mallorca (0%), según datos de insideairbnb.
@@ -111,7 +111,10 @@ ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Número aloj
 ggplot(donostia) +  geom_bar(mapping = aes(x = beds, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas (camas) con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
 
 ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
+```
 
+## Usuarios de Airbnb
+```{r, echo = FALSE, warning=FALSE}
 # To change plot order of bars, change levels in underlying factor
 reorder_size <- function(x) {
   factor(x, levels = names(sort(table(x))))
@@ -122,6 +125,47 @@ ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicen
 
 #ggplot(donostia) +geom_bar(mapping = aes(x = host_name, fill = withlicense)) #necesita reordenar
 
+propietarios <- table(donostia$host_id) #crea tabla con frecuencias (count)
+propietarios <- propietarios[order(-propietarios)] #reordena de mayor a menor
+write.csv(propietarios, "data/propietarios_id_n_alojamientos_donostia.csv") #exporta datos a csv
+propietarios_nalojamientos <- data.frame(propietarios)
+
+```
+
+## Los usuarios con más alojamientos
+```{r table_propietarios, echo = FALSE}
+library(knitr,quietly=T)
+kable(t(as.matrix(propietarios_nalojamientos[1:20,])),caption = "Los 20 usuarios con más alojamientos (id)")
+```
+
+
+
+## Los usuarios con más plazas
+
+
+```{r table_propietarios_2, echo = FALSE}
+
+
+
+require(dplyr)
+library(dplyr)
+#install.packages(dplyr)
+naccommodates <- donostia %>%
+  group_by(host_id) %>%
+  summarize(sum.accomodates=sum(accommodates)) %>%
+  #mutate(plazas=sum(accommodates)) %>%
+arrange(desc(sum.accomodates))
+
+kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
+
+
+
+```
+
+Los 20 primeros usuarios (`r format(round(100*20/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
+
+## Otros
+```{r, echo = FALSE, warning=FALSE}
 ggplot(donostia) + geom_bar(mapping = aes(reorder_size(host_listings_count), fill = withlicense))
 ggplot(donostia) + geom_bar(mapping = aes(x = host_total_listings_count))
 
