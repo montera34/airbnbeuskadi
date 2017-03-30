@@ -1,13 +1,13 @@
 ---
 title: "Airbnb en Donostia y Euskadi"
 author: "montera34"
-date: "March 25, 2017"
+date: "March 30, 2017"
 output: html_document
 ---
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-library("tidyverse")
+#library("tidyverse")
 #carga librería para reagrupar tablas de datos y hacer "melt"
 library("reshape2") #no sé la diferencia con "reshape"
 
@@ -87,55 +87,43 @@ write.table(donostia_simple, "data/donostia_simple.tsv", sep="\t",row.names=FALS
 ```
 
 #Qué datos tenemos
-La base de datos para Euskadi de Inside Airbnb contiene `r ntotal` alojamientos en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
+La base de datos de Euskadi de InsideAirbnb contiene `r ntotal` alojamientos en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
 
-Por comparar, en otras ciudades, el porcentaje de alojamientos con licencia es Barcelona (`r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)` de un total de `r nbarcelona`), Madrid (0%) y Mallorca (0%), según datos de insideairbnb.
+En las capitales tenemos:
 
-De ellos:
+ + Donostia - San Sebastián `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ + Bilbao `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ + Vitoria-Gasteiz `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
 
- + Donostia - San Sebastián `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de ellos con licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
- + Bilbao `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de ellos con licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio).
- + Vitoria-Gasteiz `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de ellos con licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+En Donostia existen `r length(levels(as.factor(donostia$host_id))) ` usuarios con alojamientos disponibles en Airbnb. 
 
 
+Por comparar, en otras ciudades, el porcentaje de alojamientos con licencia es Barcelona (`r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos), Madrid (0%) y Mallorca (0%), según datos de insideairbnb.
 
-## Número de dormitorios y tipo de alojamiento
+
+#Datos para Donostia - San Sebastián
 ```{r, echo = FALSE, warning=FALSE}
-ggplot(data = listings) + 
-  geom_point(mapping = aes(x = property_type, y = bedrooms, color = availability_365),  position = "jitter") + coord_flip()
-```
+#ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia" )
+#ggplot(donostia[donostia$withlicense==TRUE,]) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia con licencia")
 
-## Número de dormitorios y tipo de oferta
-```{r, echo = FALSE, warning=FALSE}
-ggplot(data = listings) + 
-  geom_point(mapping = aes(x = room_type, y = minimum_nights, color = availability_365 ),  position = "jitter")  + coord_flip()
-```
+ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Número alojamientos según su nº de camas con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
 
-## Número de dormitorios y tipo de oferta en Donosti
-```{r, echo = FALSE, warning=FALSE}
-ggplot(data = donostia) + 
-  geom_point(mapping = aes(x = room_type, y = bedrooms, color = minimum_nights ),  position = "jitter")  + coord_flip()
-```
+ggplot(donostia) +  geom_bar(mapping = aes(x = beds, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas (camas) con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
 
+ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
 
+# To change plot order of bars, change levels in underlying factor
+reorder_size <- function(x) {
+  factor(x, levels = names(sort(table(x))))
+}
 
-```{r, echo = FALSE, warning=FALSE}
-ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia" )
-ggplot(donostia[donostia$withlicense==TRUE,]) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia con licencia")
+#ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_name), fill = withlicense)) + coord_flip() host_name da error porque hay usuarios que comparten nombre
+ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = beds)) + labs(title= "Donostia" )+ 
-  facet_wrap(~ withlicense, ncol= 2) + coord_flip()
+#ggplot(donostia) +geom_bar(mapping = aes(x = host_name, fill = withlicense)) #necesita reordenar
 
-ggplot(donostia) +  geom_bar(mapping = aes(x = beds, fill = withlicense))
-ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = beds))
-
-ggplot(donostia) +   geom_bar(mapping = aes(x = host_name)) #necesita reordenar
-
-ggplot(donostia) + geom_bar(mapping = aes(x = host_listings_count))
+ggplot(donostia) + geom_bar(mapping = aes(reorder_size(host_listings_count), fill = withlicense))
 ggplot(donostia) + geom_bar(mapping = aes(x = host_total_listings_count))
-
-ggplot(donostia) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia" )
-ggplot(donostia[donostia$withlicense==TRUE,]) + geom_bar(mapping = aes(x = property_type)) + coord_flip() + labs(title= "Donostia con licencia" ) #cambiar por variable withlicense
 
 ggplot(data = donostia) + 
   stat_summary(
@@ -143,17 +131,17 @@ ggplot(data = donostia) +
     fun.ymin = min,
     fun.ymax = max,
     fun.y = median
-  )
+  ) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = room_type)) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = room_type, fill = withlicense)) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = accommodates )) + coord_flip()
-ggplot(donostia) + geom_bar(mapping = aes(x = bed_type )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = bed_type, fill = withlicense )) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = number_of_reviews )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = number_of_reviews, fill = withlicense )) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = review_scores_value )) + coord_flip()
-ggplot(donostia) + geom_bar(mapping = aes(x = instant_bookable )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = review_scores_value, fill = withlicense )) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = instant_bookable, fill = withlicense )) + coord_flip()
 
 ggplot(donostia) + geom_bar(mapping = aes(x = require_guest_profile_picture )) + coord_flip()
 ggplot(donostia) + geom_bar(mapping = aes(x = require_guest_phone_verification )) + coord_flip()
@@ -162,7 +150,6 @@ ggplot(donostia) + geom_bar(mapping = aes(x = calculated_host_listings_count )) 
 ggplot(donostia) + geom_bar(mapping = aes(x = reviews_per_month )) + coord_flip()
 
 #scatter plots
-
 ggplot(donostia) + geom_point(mapping = aes(x = beds, y = reviews_per_month), position = "jitter")
 ggplot(donostia) + geom_point(mapping = aes(x = cancellation_policy, y = reviews_per_month, shape = property_type, color = property_type), position = "jitter")
 ggplot(donostia) + geom_point(mapping = aes(x = beds, y = calculated_host_listings_count, shape = property_type, color = withlicense), position = "jitter")
@@ -180,5 +167,24 @@ ggplot(listings) +
     fun.y = median
   ) + coord_flip() +
   facet_wrap(~ withlicense, nrow = 2)
+```
+
+
+## Número de dormitorios y tipo de alojamiento (Euskadi)
+```{r, echo = FALSE, warning=FALSE}
+ggplot(data = listings) + 
+  geom_point(mapping = aes(x = property_type, y = bedrooms, color = withlicense),  position = "jitter") + coord_flip()
+```
+
+## Número de dormitorios y tipo de oferta (Euskadi)
+```{r, echo = FALSE, warning=FALSE}
+ggplot(data = listings) + 
+  geom_point(mapping = aes(x = room_type, y = minimum_nights, color = withlicense),  position = "jitter")  + coord_flip()
+```
+
+## Número de dormitorios y tipo de oferta en Donosti
+```{r, echo = FALSE, warning=FALSE}
+ggplot(data = donostia) + 
+  geom_point(mapping = aes(x = room_type, y = bedrooms, color = withlicense),  position = "jitter")  + coord_flip()
 ```
 
