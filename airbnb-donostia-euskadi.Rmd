@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-#library("tidyverse")
+library("tidyverse")
 #carga librería para reagrupar tablas de datos y hacer "melt"
 library("reshape2") #no sé la diferencia con "reshape"
 
