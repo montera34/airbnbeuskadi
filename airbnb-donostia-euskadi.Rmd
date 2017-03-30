@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-#library("tidyverse")
+require("tidyverse")
 #carga librería para reagrupar tablas de datos y hacer "melt"
 library("reshape2") #no sé la diferencia con "reshape"
 
@@ -144,11 +144,8 @@ kable(t(as.matrix(propietarios_nalojamientos[1:20,])),caption = "Los 20 usuarios
 
 
 ```{r table_propietarios_2, echo = FALSE}
-
-
-
-require(dplyr)
-library(dplyr)
+require(dplyr) #no sé si necesario
+library(dplyr) #no sé si necesario
 #install.packages(dplyr)
 naccommodates <- donostia %>%
   group_by(host_id) %>%
@@ -157,12 +154,15 @@ naccommodates <- donostia %>%
 arrange(desc(sum.accomodates))
 
 kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
-
-
-
 ```
 
-Los 20 primeros usuarios (`r format(round(100*20/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
+Los **10** primeros usuarios (`r format(round(100*10/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:10,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:10,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
+
+Los **20** primeros usuarios (`r format(round(100*20/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
+
+Los **50** primeros usuarios (`r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
+
+Los **100** primeros usuarios (`r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
 
 ## Otros
 ```{r, echo = FALSE, warning=FALSE}
