@@ -8,30 +8,40 @@ output: html_document
 ```{r setup, include=FALSE, cache = TRUE}
 
 require("tidyverse")
+library(tidyverse)
 #carga librería para reagrupar tablas de datos y hacer "melt"
 library("reshape2") #no sé la diferencia con "reshape"
 
 #importa datos
-listings = read.csv("data/listings_euskadi.csv")
+listings <- read.csv("data/listings_euskadi.csv")
 
 #otras ciudades
-#listings_madrid = read.csv("data/listings_madrid.csv")
+listings_madrid = read.csv("data/listings_madrid.csv")
 listings_barcelona = read.csv("data/listings_barcelona.csv")
-#listings_mallorca = read.csv("data/listings_mallorca.csv")
+listings_mallorca = read.csv("data/listings_mallorca.csv")
 
 #view data basics
 #str(listings)
 #head(listings)
 #añade variables para acceso fácil
-attach(listings)
 #summary(listings)
 
-#creates variable True/false license
+#creates variable True/false for with/without license
 listings$withlicense <- listings$license!=""
-listings$precio <- as.numeric(levels(listings$price))[listings$price] #TODO ¿substituir a price por este valor numérico?
-#listings[,c(88,96)]
 
-#municipios
+attach(listings)
+
+#exporta data
+write.table(listings, "data/listing_euskadi.tsv", sep="\t", row.names=FALSE)
+
+#Exporta a csv y elimina las columnas que dan problemas por comillas no escapadas
+listings_simple <- listings[,c(-6,-7,-8,-10,-11,-12,-13,-14,-15,-25,-35,-59)]
+write.table(listings_simple, "data/listings_euskadi_simple.csv", sep=",", row.names=FALSE)
+
+#Añade variable para precio como número y no como factor, diferente de "price"
+listings$precio <- as.numeric(levels(listings$price))[listings$price] 
+
+#Calcula el número de municipios presentes en listings
 citieslevels = levels(city)
 cities = data.frame(citieslevels) #eran 330 y tras limpieza  270
 ncities = nrow(cities) #número de municipios diferentes
@@ -41,49 +51,99 @@ donostia = listings[city=="Donostia",]
 bilbao = listings[city=="Bilbao",]
 vitoria = listings[city=="Vitoria-Gasteiz",]
 
-attach(donostia)
-
 #número de pisos en las capitales
 ntotal = nrow(listings) #numero de pisos
 ndonostia = nrow(donostia)
 nbilbao = nrow(bilbao)
 nvitoria = nrow(vitoria)
 
-#nmadrid = nrow(listings_madrid)
+#otras ciudades
+nmadrid = nrow(listings_madrid)
 nbarcelona = nrow(listings_barcelona)
-#nmallorca = nrow(listings_mallorca)
+nmallorca = nrow(listings_mallorca)
 
-#pisos con licencia
-ntotallicencia = nrow(listings[license!= "",])
-ndonostialicencia = nrow(listings[license!= ""&city=="Donostia",])
-nbilbaolicencia = nrow(listings[license!= ""&city=="Bilbao",])
-nvitorialicencia = nrow(listings[license!= ""&city=="Vitoria-Gasteiz",])
-#ndonostialicencia = nrow(donostia[donostia$license!= "",]) # dan mismo resultado
+```
 
-#donostialicencia = listings[license!= ""&city=="Donostia",]
+```{r, include=FALSE, cache = TRUE}
+#calcula alojamientos con licencia
+ntotallicencia = nrow(listings[listings$withlicense==TRUE,])
+ndonostialicencia = nrow(listings[listings$withlicense==TRUE&city=="Donostia",])
+nbilbaolicencia = nrow(listings[listings$withlicense==TRUE&city=="Bilbao",])
+nvitorialicencia = nrow(listings[listings$withlicense==TRUE&city=="Vitoria-Gasteiz",])
 
-#nmadridlicencia = nrow(listings_madrid[listings_madrid$license!= "",88])
+# nmadridlicencia = nrow(listings_madrid[listings_madrid$license!= "",])
 nbarcelonalicencia = nrow(listings_barcelona[listings_barcelona$license!= "",])
-#nmallorcalicencia = nrow(listings _mallorca[listings_mallorca$license!= "",])
+# nmallorcalicencia = nrow(listings _mallorca[listings_mallorca$license!= "",])
+```
 
+```{r, include=FALSE, cache = TRUE}
 # % pisos con licencia
 totalLicenciaPerCent = ntotallicencia / ntotal
 donostiaLicenciaPerCent = ndonostialicencia / ndonostia
 bilbaoLicenciaPerCent = nbilbaolicencia / nbilbao
 vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
 
-#madridLicenciaPerCent = nmadridlicencia / nmadrid
+# madridLicenciaPerCent = nmadridlicencia / nmadrid
 barcelonaLicenciaPerCent = nbarcelonalicencia / nbarcelona
-#mallorcaLicenciaPerCent = nmallorcalicencia / nmallorca
+# mallorcaLicenciaPerCent = nmallorcalicencia / nmallorca
+```
+
+```{r, include=FALSE, cache = TRUE}
+#Añade los datos de **Donostia**. A aprtir de aquí todas las variables estarán referidas a esta ciudad
+attach(donostia)
 
 #--------------------------export data --------------------
 #exports only some columns to avoid problems with scapes in data
-donostia_simple = donostia[,c(1,5,20,22,23,49,50,51,52,53,54,55,56,57,58,61,75,77,88,96)] #TODO meter precio
+#donostia_simple = donostia[,c(1,5,20,22,23,49,50,51,52,53,54,55,56,57,58,61,75,77,88,96)] #TODO meter precio
+donostia_simple = donostia[,c(-6,-7,-8,-10,-11,-12,-13,-14,-15,-25,-35,-59)]
 
 #exporta data
 write.table(donostia, "data/donostia.tsv", sep="\t",row.names=FALSE)
+write.table(donostia, "data/donostia.csv", sep=",",row.names=FALSE)
 #need to export to tsv to avoid prolems with comas inside data
 write.table(donostia_simple, "data/donostia_simple.tsv", sep="\t",row.names=FALSE) 
+write.table(donostia_simple, "data/donostia_simple.csv", sep=",",row.names=FALSE) 
+
+
+#Probando a separar los datos de las amenities
+# donostia[,35]
+# grep("phone",as.character(donostia[6,35]))
+# donostia$email <- grep("email",donostia[,35])
+# donostia_features <- data.frame(as.character(donostia[,35]))
+# donostia_features$email <- data.frame(grep("phone",as.character(donostia[,35])))
+# n = nrow(donostia_features)
+# #loop por todos los datos y los guarda en las categorías correspondientes
+# for (j in 1:n) {
+#   if(gsub("\\[|\\]|'","",unlist(strsplit(as.character(donostia[j,35]), ", ")))[1]=="email") {
+#     donostia_features$email[j] = 1 
+#   } else {
+#     donostia_features$email[j] = 0
+#   }
+# }
+# test = gsub("\\[|\\]|'","",unlist(strsplit(as.character(donostia[1,35]), ", ", fixed = TRUE)))[2]
+# 
+# donostia[,59]
+# grep("TV",as.character(donostia[6,59]))
+# donostia_amenities <- data.frame(as.character(donostia[,59]))
+# 
+# amenity_types = unique(tolower(gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[,59]), ",")))))
+# n = nrow(donostia_amenities)
+# m = length(amenity_types)
+# 
+# #loop por todos los datos y los guarda en las categorías correspondientes
+# for (j in 1:n) {
+#   for (i in 1:m) {
+#     if(gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[j,59]), ",", fixed = TRUE)))[m]=="TV") {
+#       donostia_amenities$tv[j] = 1 
+#     } else {
+#       donostia_amenities$tv[j] = 0
+#     }
+#   }
+# }
+# 
+# gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[1,59]), ",")))[1]
+
+
 ```
 
 #Airbnb en Euskadi
@@ -91,21 +151,22 @@ La base de datos de Euskadi de InsideAirbnb contiene `r ntotal` alojamientos en 
 
 En las capitales tenemos:
 
- + **Donostia - San Sebastián** `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(donostia$accommodates) ` plazas.
- + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(bilbao$accommodates) ` plazas.
- + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(vitoria$accommodates) ` plazas.
+ + **Donostia - San Sebastián** `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(donostia$accommodates) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(donostia$host_id)))`
+ + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(bilbao$accommodates) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(bilbao$host_id)))`
+ + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(vitoria$accommodates) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`
 
-Por comparar, en otras ciudades, el porcentaje de alojamientos con licencia es Barcelona (`r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos), Madrid (0%) y Mallorca (0%), según datos de insideairbnb.
+Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es `r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos según datos de insideairbnb. Madrid (`r nmadrid` alojamientos) y Mallorca (`r nmallorca` alojamientos) no tienen indicado si tienen licencia. 
 
 ## Donostia - San Sebastián
 
 En Donostia existen `r length(levels(as.factor(donostia$host_id)))` usuarios con alojamientos disponibles en Airbnb. 
 
 ```{r, echo = FALSE, warning=FALSE}
+ggplot(donostia) +  geom_bar(mapping = aes(x = requires_license, fill = withlicense)) + labs(title= "Número alojamientos sin y con licencia" ) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = accommodates)) + labs(title= "Número alojamientos según su plazas con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
+ggplot(donostia) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
 
-ggplot(donostia) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas con y sin licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
+ggplot(donostia) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
 
 ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
 ```
@@ -133,6 +194,12 @@ propietarios_nalojamientos <- data.frame(propietarios)
 ```{r table_propietarios, echo = FALSE}
 library(knitr,quietly=T)
 kable(t(as.matrix(propietarios_nalojamientos[1:20,])),caption = "Los 20 usuarios con más alojamientos (id)")
+
+# nalojamientos <- donostia %>%
+#   group_by(host_id) %>%
+#   summarize(sum.alojamientos=count(requires_license)) %>%
+# arrange(desc(sum.alojamientos))
+# kable(nalojamientos[1:20,],caption = "Los 20 usuarios con más alojamientos (id)")
 ```
 
 ### Los usuarios con más plazas
@@ -166,55 +233,55 @@ kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
 
 ggplot(donostia) + geom_bar(mapping = aes(reorder_size(price), fill = withlicense)) + coord_flip() #se ve que 120 es e lprecio más popular
 
-ggplot(donostia) + geom_bar(mapping = aes(x = precio, fill = withlicense)) + coord_flip() #se ve que 120 es e lprecio más popular
+# ggplot(donostia) + geom_bar(mapping = aes(x = precio, fill = withlicense)) + coord_flip() #se ve que 120 es e lprecio más popular
 
 ggplot(donostia) + geom_point(mapping = aes(reorder_size(price), y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
 
-ggplot(donostia) + geom_point(mapping = aes(x = precio, y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
+# ggplot(donostia) + geom_point(mapping = aes(x = precio, y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
 
-median(na.omit(precio))
-mean(na.omit(precio))
-quantile(na.omit(precio))
-
-boxplot(na.omit(precio), horizontal=TRUE)
-
-hist(na.omit(precio))
-
-# Filled Density Plot
-d <- density(na.omit(precio))
-plot(d, main="Kernel Density of prices. Todos", xlim = c(0,1000), ylim = c(0,0.01))
-polygon(d, col="grey", border="grey") 
-
-d <- density(na.omit(precio[withlicense==TRUE]))
-plot(d, main="Kernel Density of prices con licencia", xlim = c(0,1000), ylim = c(0,0.01))
-polygon(d, col="grey", border="grey") 
-
-d <- density(na.omit(precio[withlicense==FALSE]))
-plot(d, main="Kernel Density of prices sin licencia?", xlim = c(0,1000), ylim = c(0,0.01))
-polygon(d, col="grey", border="grey") 
+# median(na.omit(precio))
+# mean(na.omit(precio))
+# quantile(na.omit(precio))
+# 
+# boxplot(na.omit(precio), horizontal=TRUE)
+# 
+# hist(na.omit(precio))
+# 
+# # Filled Density Plot
+# d <- density(na.omit(precio))
+# plot(d, main="Kernel Density of prices. Todos", xlim = c(0,1000), ylim = c(0,0.01))
+# polygon(d, col="grey", border="grey") 
+# 
+# d <- density(na.omit(precio[withlicense==TRUE]))
+# plot(d, main="Kernel Density of prices con licencia", xlim = c(0,1000), ylim = c(0,0.01))
+# polygon(d, col="grey", border="grey") 
+# 
+# d <- density(na.omit(precio[withlicense==FALSE]))
+# plot(d, main="Kernel Density of prices sin licencia", xlim = c(0,1000), ylim = c(0,0.01))
+# polygon(d, col="grey", border="grey") 
 
 ```
 
 ```{r, echo = FALSE, warning=FALSE}
-# Dotplot: Grouped Sorted and Colored
-# Sort by mpg, group and color by cylinder
-x <- donostia[order(donostia$precio),] # sort by precio
-x$property_type <- factor(x$property_type) # it must be a factor
-x$color[x$property_type=="Apartment"] <- "red"
-x$color[x$property_type=="House"] <- "blue"
-x$color[x$property_type=="Villa"] <- "darkgreen"
-dotchart(x$precio,labels=row.names(x),cex=.7,groups= x$property_type,
-   main="Precio por noche por tipo de alojamiento",
-   xlab="dollars", gcolor="black", color=x$color) 
-
-
-y <- donostia[order(donostia$precio),] # sort by mpg
-y$withlicense <- factor(y$withlicense) # it must be a factor
-y$color[y$pwithlicense==FALSE] <- "red"
-y$color[y$withlicense==TRUE] <- "blue"
-dotchart(y$precio,labels=row.names(y),cex=.7,groups= y$withlicense,
-   main="Precio por noche para alojamientos con y sin licencia",
-   xlab="dollars", gcolor="black", color=x$color) 
+# # Dotplot: Grouped Sorted and Colored
+# # Sort by mpg, group and color by cylinder
+# x <- donostia[order(donostia$precio),] # sort by precio
+# x$property_type <- factor(x$property_type) # it must be a factor
+# x$color[x$property_type=="Apartment"] <- "red"
+# x$color[x$property_type=="House"] <- "blue"
+# x$color[x$property_type=="Villa"] <- "darkgreen"
+# dotchart(x$precio,labels=row.names(x),cex=.7,groups= x$property_type,
+#    main="Precio por noche por tipo de alojamiento",
+#    xlab="dollars", gcolor="black", color=x$color) 
+# 
+# 
+# y <- donostia[order(donostia$precio),] # sort by mpg
+# y$withlicense <- factor(y$withlicense) # it must be a factor
+# y$color[y$pwithlicense==FALSE] <- "red"
+# y$color[y$withlicense==TRUE] <- "blue"
+# dotchart(y$precio,labels=row.names(y),cex=.7,groups= y$withlicense,
+#    main="Precio por noche para alojamientos con y sin licencia",
+#    xlab="dollars", gcolor="black", color=x$color) 
 
 ```
 
