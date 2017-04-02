@@ -90,14 +90,14 @@ attach(donostia)
 
 #--------------------------export data --------------------
 #write.table(donostia, "data/donostia.tsv", sep="\t",row.names=FALSE) da problemas el tsv
-write.table(donostia, "data/donostia.csv", sep=",",row.names=FALSE)
-write.table(donostia_simple, "data/donostia_simple.csv", sep=",",row.names=FALSE)
+write.table(donostia, "data/listings_donostia.csv", sep=",",row.names=FALSE)
+write.table(donostia_simple, "data/listings_donostia_simple.csv", sep=",",row.names=FALSE)
 
-write.table(bilbao, "data/bilbao.csv", sep=",",row.names=FALSE)
-write.table(bilbao_simple, "data/bilbao_simple.csv", sep=",",row.names=FALSE)
+write.table(bilbao, "data/listings_bilbao.csv", sep=",",row.names=FALSE)
+write.table(bilbao_simple, "data/listings_bilbao_simple.csv", sep=",",row.names=FALSE)
 
-write.table(vitoria, "data/vitoria.csv", sep=",",row.names=FALSE)
-write.table(vitoria_simple, "data/vitoria_simple.csv", sep=",",row.names=FALSE) 
+write.table(vitoria, "data/listings_vitoria.csv", sep=",",row.names=FALSE)
+write.table(vitoria_simple, "data/listings_vitoria_simple.csv", sep=",",row.names=FALSE)
 
 #Probando a separar los datos de las amenities
 # donostia[,35]
