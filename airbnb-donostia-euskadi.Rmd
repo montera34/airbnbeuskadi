@@ -47,13 +47,13 @@ cities = data.frame(citieslevels) #eran 330 y tras limpieza  270
 ncities = nrow(cities) #número de municipios diferentes
 
 #listados por capitales
-donostia = listings[city=="Donostia",] 
-bilbao = listings[city=="Bilbao",]
-vitoria = listings[city=="Vitoria-Gasteiz",]
+donostia = listings[listings$city=="Donostia",]
+bilbao = listings[listings$city=="Bilbao",]
+vitoria = listings[listings$city=="Vitoria-Gasteiz",]
 #exports only some columns to avoid problems with scapes in data
-donostia_simple = listings_simple[city=="Donostia",] 
-bilbao_simple = listings_simple[city=="Bilbao",]
-vitoria_simple = listings_simple[city=="Vitoria-Gasteiz",]
+donostia_simple = listings_simple[listings$city=="Donostia",]
+bilbao_simple = listings_simple[listings$city=="Bilbao",]
+vitoria_simple = listings_simple[listings$city=="Vitoria-Gasteiz",]
 
 #número de pisos en las capitales
 ntotal = nrow(listings) #numero de pisos
@@ -89,10 +89,9 @@ vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
 attach(donostia)
 
 #--------------------------export data --------------------
-#exporta data
 #write.table(donostia, "data/donostia.tsv", sep="\t",row.names=FALSE) da problemas el tsv
 write.table(donostia, "data/donostia.csv", sep=",",row.names=FALSE)
-#need to export to tsv to avoid prolems with comas inside data
+write.table(donostia_simple, "data/donostia_simple.csv", sep=",",row.names=FALSE)
 
 write.table(bilbao, "data/bilbao.csv", sep=",",row.names=FALSE)
 write.table(bilbao_simple, "data/bilbao_simple.csv", sep=",",row.names=FALSE)
@@ -186,7 +185,7 @@ ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicen
 
 propietarios <- table(donostia$host_id) #crea tabla con frecuencias (count)
 propietarios <- propietarios[order(-propietarios)] #reordena de mayor a menor
-write.csv(propietarios, "data/propietarios_id_n_alojamientos_donostia.csv") #exporta datos a csv
+write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") #exporta datos a csv
 propietarios_nalojamientos <- data.frame(propietarios)
 
 ```
