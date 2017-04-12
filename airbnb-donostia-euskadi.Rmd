@@ -7,13 +7,16 @@ output: html_document
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-# require("tidyverse")
 # library(tidyverse)
+# library(ggplot2) #ya incluido en tidyverse
+# library(dplyr) #ya incluido en tidyverse
 #carga librería para reagrupar tablas de datos y hacer "melt"
 library("reshape2") #no sé la diferencia con "reshape"
 
-#importa datos
-listings <- read.csv("data/listings_euskadi.csv")
+# Carga datos
+#introduce tu archivo listings. NEcesitas desactivar Quotes, porque el texto incluye \"
+listings <- read.delim("data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos
+listings_simple <- read.delim("data/listings_euskadi_simple.tsv",sep = "\t")
 
 #otras ciudades
 # listings_madrid = read.csv("data/listings_madrid.csv")
@@ -26,34 +29,21 @@ listings <- read.csv("data/listings_euskadi.csv")
 #añade variables para acceso fácil
 #summary(listings)
 
-#creates variable True/false for with/without license
-listings$withlicense <- listings$license!=""
-
-attach(listings)
-
-#exporta data
-write.table(listings, "data/listing_euskadi.tsv", sep="\t", row.names=FALSE)
-
-#Exporta a csv y elimina las columnas que dan problemas por comillas no escapadas
-listings_simple <- listings[,c(-6,-7,-8,-10,-11,-12,-13,-14,-15,-25,-35,-59)]
-write.table(listings_simple, "data/listings_euskadi_simple.csv", sep=",", row.names=FALSE)
-
-#Añade variable para precio como número y no como factor, diferente de "price"
-listings$precio <- as.numeric(levels(listings$price))[listings$price] 
+attach(listings_simple)
 
 #Calcula el número de municipios presentes en listings
-citieslevels = levels(city)
+citieslevels = levels(listings_simple$city)
 cities = data.frame(citieslevels) #eran 330 y tras limpieza  270
 ncities = nrow(cities) #número de municipios diferentes
 
 #listados por capitales
-donostia = listings[listings$city=="Donostia",]
-bilbao = listings[listings$city=="Bilbao",]
-vitoria = listings[listings$city=="Vitoria-Gasteiz",]
+donostia = listings_simple[listings_simple$city=="Donostia",]
+bilbao = listings_simple[listings_simple$city=="Bilbao",]
+vitoria = listings_simple[listings_simple$city=="Vitoria-Gasteiz",]
 #exports only some columns to avoid problems with scapes in data
-donostia_simple = listings_simple[listings$city=="Donostia",]
-bilbao_simple = listings_simple[listings$city=="Bilbao",]
-vitoria_simple = listings_simple[listings$city=="Vitoria-Gasteiz",]
+donostia_simple = listings_simple[listings_simple$city=="Donostia",]
+bilbao_simple = listings_simple[listings_simple$city=="Bilbao",]
+vitoria_simple = listings_simple[listings_simple$city=="Vitoria-Gasteiz",]
 
 #número de pisos en las capitales
 ntotal = nrow(listings) #numero de pisos
@@ -67,10 +57,10 @@ nvitoria = nrow(vitoria)
 # nmallorca = nrow(listings_mallorca)
 
 #calcula alojamientos con licencia
-ntotallicencia = nrow(listings[listings$withlicense==TRUE,])
-ndonostialicencia = nrow(listings[listings$withlicense==TRUE&city=="Donostia",])
-nbilbaolicencia = nrow(listings[listings$withlicense==TRUE&city=="Bilbao",])
-nvitorialicencia = nrow(listings[listings$withlicense==TRUE&city=="Vitoria-Gasteiz",])
+ntotallicencia = nrow(listings_simple[listings_simple$withlicense==TRUE,])
+ndonostialicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Donostia",])
+nbilbaolicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Bilbao",])
+nvitorialicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Vitoria-Gasteiz",])
 
 # nbarcelonalicencia = nrow(listings_barcelona[listings_barcelona$license!= "",])
 # madrid y mallorca no cuentan con licencias turísticas en los alojamientos de airbnb
@@ -82,23 +72,16 @@ bilbaoLicenciaPerCent = nbilbaolicencia / nbilbao
 vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
 
 # barcelonaLicenciaPerCent = nbarcelonalicencia / nbarcelona
+
+#---------------------- Selecciona archivo listings
+#Selecciona regio/lugar a analizar
+local_activo = donostia_simple
+local_activo_name = "Donostia"
+attach(local_activo)
+#si local_activo = donostia todos los análisis se referirán a Donostia
 ```
 
 ```{r, include=FALSE, cache = TRUE}
-#Añade los datos de **Donostia**. A aprtir de aquí todas las variables estarán referidas a esta ciudad
-attach(donostia)
-
-#--------------------------export data --------------------
-#write.table(donostia, "data/donostia.tsv", sep="\t",row.names=FALSE) da problemas el tsv
-write.table(donostia, "data/listings_donostia.csv", sep=",",row.names=FALSE)
-write.table(donostia_simple, "data/listings_donostia_simple.csv", sep=",",row.names=FALSE)
-
-write.table(bilbao, "data/listings_bilbao.csv", sep=",",row.names=FALSE)
-write.table(bilbao_simple, "data/listings_bilbao_simple.csv", sep=",",row.names=FALSE)
-
-write.table(vitoria, "data/listings_vitoria.csv", sep=",",row.names=FALSE)
-write.table(vitoria_simple, "data/listings_vitoria_simple.csv", sep=",",row.names=FALSE)
-
 #Probando a separar los datos de las amenities
 # donostia[,35]
 # grep("phone",as.character(donostia[6,35]))
@@ -143,11 +126,18 @@ write.table(vitoria_simple, "data/listings_vitoria_simple.csv", sep=",",row.name
 #Airbnb en Euskadi
 La base de datos de Euskadi de InsideAirbnb contiene `r ntotal` alojamientos en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
 
+```{r, include=FALSE, cache = TRUE}
+```
+
 En las capitales tenemos:
 
- + **Donostia - San Sebastián** `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(donostia$accommodates) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(donostia$host_id)))`
- + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(bilbao$accommodates) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(bilbao$host_id)))`
- + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(vitoria$accommodates) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`
+ + **Donostia - San Sebastián** `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(na.omit(donostia_simple$accommodates)) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(donostia$host_id)))`
+ 
+```{r, include=FALSE, cache = TRUE} 
+```
+
+ + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(na.omit(bilbao_simple$accommodates)) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(bilbao$host_id)))`
+ + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(na.omit(vitoria_simple$accommodates)) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`
 
 
 Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es 18.0% de un total de 17369 alojamientos según datos de insideairbnb. Madrid (7446 alojamientos) y Mallorca (11271 alojamientos) no tienen indicado si tienen licencia.
@@ -157,18 +147,18 @@ Por comparar con otras ciudades, el porcentaje de alojamientos con licencia tur�
 # Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es `r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos según datos de insideairbnb. Madrid (`r nmadrid` alojamientos) y Mallorca (`r nmallorca` alojamientos) no tienen indicado si tienen licencia. 
 ``` 
 
-## Donostia - San Sebastián
+## Efecto Airbnb en `r local_activo_name`
 
-En Donostia existen `r length(levels(as.factor(donostia$host_id)))` usuarios con alojamientos disponibles en Airbnb. 
+En `r local_activo_name` existen `r length(levels(as.factor(local_activo$host_id)))` usuarios con alojamientos disponibles en Airbnb. 
 
 ```{r, echo = FALSE, warning=FALSE}
-ggplot(donostia) +  geom_bar(mapping = aes(x = requires_license, fill = withlicense)) + labs(title= "Número alojamientos sin y con licencia" ) + coord_flip()
+ggplot(local_activo) +  geom_bar(mapping = aes(x = requires_license, fill = withlicense)) + labs(title= "Número alojamientos sin y con licencia" ) + coord_flip()
 
-ggplot(donostia) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
+ggplot(local_activo) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + facet_wrap(~ withlicense, ncol= 2) + coord_flip()
 
-ggplot(donostia) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,12,1)) + coord_flip()
+ggplot(local_activo) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,16,1)) + coord_flip()
 
-ggplot(donostia) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
+ggplot(local_activo) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
 ```
 
 ## Usuarios de Airbnb
@@ -204,27 +194,26 @@ kable(t(as.matrix(propietarios_nalojamientos[1:20,])),caption = "Los 20 usuarios
 
 ### Los usuarios con más plazas
 
-```{r table_propietarios_2, echo = FALSE}
-require(dplyr) #no sé si necesario
-library(dplyr) #no sé si necesario
-#install.packages(dplyr)
-naccommodates <- donostia %>%
-  group_by(host_id) %>%
-  summarize(sum.accomodates=sum(accommodates)) %>%
-  #mutate(plazas=sum(accommodates)) %>%
-arrange(desc(sum.accomodates))
+```{r table_anfitriones_2, echo = FALSE}
+#requires dplyr package 
+# Da error así que comento sección
+# naccommodates <- local_activo %>%
+#   group_by(host_id) %>%
+#   summarize(sum.accomodates=sum(na.omit(accommodates)) %>%
+# arrange(desc(sum.accomodates))
 ```
 
-Los **10** primeros usuarios (`r format(round(100*10/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:10,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:10,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
-
-Los **20** primeros usuarios (`r format(round(100*20/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
-
-Los **50** primeros usuarios (`r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
-
-Los **100** primeros usuarios (`r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1) `% del total de plazas).
-
-```{r, echo = FALSE, warning=FALSE}
-kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
+```{r table_anfitriones_2, echo = FALSE}
+# Da error así que comento sección
+# Los 10 primeros usuarios (r format(round(100*10/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:10,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:10,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
+# 
+# Los 20 primeros usuarios (r format(round(100*20/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:20,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:20,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
+# 
+# Los 50 primeros usuarios (r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:50,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
+# 
+# Los 100 primeros usuarios (r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:100,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
+# 
+# kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
 ```
 
 ### Precio por noche
