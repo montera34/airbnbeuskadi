@@ -1,13 +1,13 @@
 ---
 title: "Airbnb en Donostia y Euskadi"
 author: "montera34"
-date: "April 1, 2017"
+date: "April 12, 2017"
 output: html_document
 ---
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-# library(tidyverse)
+library(tidyverse)
 # library(ggplot2) #ya incluido en tidyverse
 # library(dplyr) #ya incluido en tidyverse
 #carga librería para reagrupar tablas de datos y hacer "melt"
@@ -126,16 +126,9 @@ attach(local_activo)
 #Airbnb en Euskadi
 La base de datos de Euskadi de InsideAirbnb contiene `r ntotal` alojamientos en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
 
-```{r, include=FALSE, cache = TRUE}
-```
-
 En las capitales tenemos:
 
  + **Donostia - San Sebastián** `r ndonostia` (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(na.omit(donostia_simple$accommodates)) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(donostia$host_id)))`
- 
-```{r, include=FALSE, cache = TRUE} 
-```
-
  + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(na.omit(bilbao_simple$accommodates)) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(bilbao$host_id)))`
  + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio). Dispone de `r sum(na.omit(vitoria_simple$accommodates)) ` plazas. Usuarios con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`
 
@@ -169,11 +162,11 @@ reorder_size <- function(x) {
 }
 
 #ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_name), fill = withlicense)) + coord_flip() host_name da error porque hay usuarios que comparten nombre
-ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip()
+ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip()
 
 #ggplot(donostia) +geom_bar(mapping = aes(x = host_name, fill = withlicense)) #necesita reordenar
 
-propietarios <- table(donostia$host_id) #crea tabla con frecuencias (count)
+propietarios <- table(local_activo$host_id) #crea tabla con frecuencias (count)
 propietarios <- propietarios[order(-propietarios)] #reordena de mayor a menor
 write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") #exporta datos a csv
 propietarios_nalojamientos <- data.frame(propietarios)
@@ -201,18 +194,36 @@ kable(t(as.matrix(propietarios_nalojamientos[1:20,])),caption = "Los 20 usuarios
 #   group_by(host_id) %>%
 #   summarize(sum.accomodates=sum(na.omit(accommodates)) %>%
 # arrange(desc(sum.accomodates))
+
+# 1: filter to keep three states.  
+# basic_summ = filter(mprices, state %in% c("California", "New York", "Illinois"))
+ 
+# 2: set up data frame for by-group processing.  
+naccommodates = group_by(local_activo, host_id)
+ 
+# 3: calculate the three summary metrics
+naccommodates = summarise(naccommodates, 
+                        accommodates_sum = sum(accommodates)
+                  )
+
+newdata <- naccommodates[order(accommodates_sum),] 
+
+ggplot(naccommodates) +
+  geom_bar(stat='identity', aes(x = reorder(host_id,accommodates_sum), y = accommodates_sum)) + coord_flip() +
+  labs(x = "anfitriones", y = "anuncios", title= "número de anuncios por anfitrión" ) 
+# + scale_y_continuous(breaks=seq(0,300,10))
 ```
 
-```{r table_anfitriones_2, echo = FALSE}
-# Da error así que comento sección
-# Los 10 primeros usuarios (r format(round(100*10/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:10,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:10,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
-# 
-# Los 20 primeros usuarios (r format(round(100*20/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:20,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:20,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
-# 
-# Los 50 primeros usuarios (r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:50,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
-# 
-# Los 100 primeros usuarios (r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)% del total de usuarios) con más plazas tienen r sum(naccommodates[1:100,2]) plazas disponibles (que son el r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1)% del total de plazas).
-# 
+
+Los 10 primeros usuarios (`r format(round(100*10/length(levels(as.factor(local_activo$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:10,2]`) plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:10,2])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
+
+Los 20 primeros usuarios (`r format(round(100*20/length(levels(as.factor(local_activo$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
+
+Los 50 primeros usuarios (`r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1)`% del total de plazas).
+
+Los 100 primeros usuarios (`r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de usuarios) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1)`% del total de plazas).
+
+```{r table_anfitriones_3, echo = FALSE}
 # kable(naccommodates[1:20,],caption = "Los 20 usuarios con más plazas (id)")
 ```
 
