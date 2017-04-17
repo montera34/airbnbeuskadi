@@ -1,5 +1,5 @@
 ---
-title: "Airbnb en Donostia y Euskadi"
+title: "Airbnb en Euskadi"
 author: "montera34"
 date: "April 12, 2017"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE, cache = TRUE}
 
-# library(tidyverse)
+library(tidyverse)
 # library(ggplot2) #ya incluido en tidyverse
 # library(dplyr) #ya incluido en tidyverse
 #carga librería para reagrupar tablas de datos y hacer "melt"
@@ -169,20 +169,27 @@ reorder_size <- function(x) {
 }
 
 #ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_name), fill = withlicense)) + coord_flip() host_name da error porque hay anfitriones que comparten nombre
-ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip() + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),)
+ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip() + theme(axis.text.y = element_blank())
 
-propietarios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
-propietarios <- propietarios[order(-propietarios)] #reordena de mayor a menor
-propietarios_nalojamientos <- data.frame(propietarios) # crea data frame
+nanuncios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+nanuncios <- nanuncios[order(-nanuncios)] #reordena de mayor a menor
+anfitriones_anuncios <- data.frame(nanuncios) # crea data frame
+anfitriones_anuncios$host_id <- row.names(nanuncios)
 
+# gráfico 
+ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = nanuncios)) 
++
+  labs(x = "Número de anuncios", y = "anfitrion")
+    
 # exporta datos a csv
-# write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv")
+# write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") 
 ```
 
 ### Los anfitriones con más alojamientos
 ```{r table_propietarios, echo = FALSE}
 library(knitr,quietly=T)
 kable(as.data.frame(propietarios_nalojamientos[1:20,]),caption = "Los 20 anfitriones con más alojamientos (id)")
+kable(as.data.frame(anfitriones_anuncios[1:20,1:2]),caption = "Los 20 anfitriones con más alojamientos (id)")
 
 # nalojamientos <- donostia %>%
 #   group_by(host_id) %>%
