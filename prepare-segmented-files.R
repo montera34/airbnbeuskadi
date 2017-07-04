@@ -1,5 +1,10 @@
+# Este script prepara los archivos de anuncios de Airbnb por ciudades
+# El archivo de datos del que se parte proviene de http://insideairbnb.com/
+# y está en la carpeta data/original https://github.com/montera34/airbnbeuskadi/blob/master/data/original/listings_euskadi.csv.gz
+# Ese archivo ha sido "limpiado" con openrefine y está disponible en data/original/listings_euskadi-csv_after-openrefine.tsv
+
 #importa datos
-listings <- read.delim("data/original/listings-csv_tras-openrefine2.tsv", sep = "\t")
+listings <- read.delim("data/original/listings-euskadi-csv_after-openrefine.tsv", sep = "\t")
 
 #creates variable True/false for with/without license
 listings$withlicense <- listings$license!=""
