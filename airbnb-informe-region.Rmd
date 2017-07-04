@@ -6,34 +6,38 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE, cache = TRUE}
+# Instala y carga librerías
+
+# la primera vez necesitas instalar
+# install.packages("tidyverse")
 
 library(tidyverse)
+
 # library(ggplot2) #ya incluido en tidyverse
 # library(dplyr) #ya incluido en tidyverse
-#carga librería para reagrupar tablas de datos y hacer "melt"
-library("reshape2") #no sé la diferencia con "reshape"
+
+# carga librería para reagrupar tablas de datos y hacer "melt"
+# library("reshape2") #no sé la diferencia con "reshape"
 
 # Carga datos
-#introduce tu archivo listings. NEcesitas desactivar Quotes, porque el texto incluye \"
-listings <- read.delim("data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos
-listings_simple <- read.delim("data/listings_euskadi_simple.tsv",sep = "\t")
 
-#otras ciudades
-# listings_madrid = read.csv("data/listings_madrid.csv")
-# listings_barcelona = read.csv("data/listings_barcelona.csv")
-# listings_mallorca = read.csv("data/listings_mallorca.csv")
+#introduce tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
+listings <- read.delim("data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos. Salen 3453 pero deberían ser 2847 anuncios.
+listings_simple <- read.delim("data/listings_euskadi_simple.csv",sep = ",")
+# Load reviews
+reviews <- read.csv("data/original/reviews_euskadi.csv",sep = ",")
 
-#view data basics
-#str(listings)
-#head(listings)
-#añade variables para acceso fácil
-#summary(listings)
+# view data basics
+# str(listings)
+# head(listings)
+# añade variables para acceso fácil
+# summary(listings)
 
 attach(listings_simple)
 
 #Calcula el número de municipios presentes en listings
 citieslevels = levels(listings_simple$city)
-cities = data.frame(citieslevels) #eran 330 y tras limpieza  270
+cities = data.frame(citieslevels) #eran 330 municipios y tras limpieza se quedaron en 270
 ncities = nrow(cities) #número de municipios diferentes
 
 #listados por capitales
@@ -75,55 +79,15 @@ vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
 
 #---------------------- Selecciona archivo listings
 #Selecciona regio/lugar a analizar
-local_activo = donostia_simple
+local_activo = donostia
 local_activo_name = "Donostia"
 attach(local_activo)
-#si local_activo = donostia todos los análisis se referirán a Donostia
+# si ponemos 
+# local_activo = donostia 
+# todos los análisis se referirán a Donostia
 ```
 
-```{r, include=FALSE, cache = TRUE}
-#Probando a separar los datos de las amenities
-# donostia[,35]
-# grep("phone",as.character(donostia[6,35]))
-# donostia$email <- grep("email",donostia[,35])
-# donostia_features <- data.frame(as.character(donostia[,35]))
-# donostia_features$email <- data.frame(grep("phone",as.character(donostia[,35])))
-# n = nrow(donostia_features)
-# #loop por todos los datos y los guarda en las categorías correspondientes
-# for (j in 1:n) {
-#   if(gsub("\\[|\\]|'","",unlist(strsplit(as.character(donostia[j,35]), ", ")))[1]=="email") {
-#     donostia_features$email[j] = 1 
-#   } else {
-#     donostia_features$email[j] = 0
-#   }
-# }
-# test = gsub("\\[|\\]|'","",unlist(strsplit(as.character(donostia[1,35]), ", ", fixed = TRUE)))[2]
-# 
-# donostia[,59]
-# grep("TV",as.character(donostia[6,59]))
-# donostia_amenities <- data.frame(as.character(donostia[,59]))
-# 
-# amenity_types = unique(tolower(gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[,59]), ",")))))
-# n = nrow(donostia_amenities)
-# m = length(amenity_types)
-# 
-# #loop por todos los datos y los guarda en las categorías correspondientes
-# for (j in 1:n) {
-#   for (i in 1:m) {
-#     if(gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[j,59]), ",", fixed = TRUE)))[m]=="TV") {
-#       donostia_amenities$tv[j] = 1 
-#     } else {
-#       donostia_amenities$tv[j] = 0
-#     }
-#   }
-# }
-# 
-# gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[1,59]), ",")))[1]
-
-
-```
-
-#Airbnb en Euskadi
+# Airbnb en Euskadi
 Airbnb en Euskadi, según los datos obtenidos por InsideAirbnb, contiene `r ntotal` anuncios en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
 
 En las capitales tenemos:
@@ -143,11 +107,12 @@ Por comparar con otras ciudades, el porcentaje de alojamientos con licencia tur�
 # Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es `r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos según datos de insideairbnb. Madrid (`r nmadrid` alojamientos) y Mallorca (`r nmallorca` alojamientos) no tienen indicado si tienen licencia. 
 ``` 
 
-## Efecto Airbnb en `r local_activo_name`
+# Efecto Airbnb en `r local_activo_name`
 
 En `r local_activo_name` existen `r length(levels(as.factor(local_activo$host_id)))` anfitriones con alojamientos disponibles en Airbnb. 
 
 ```{r, echo = FALSE, warning=FALSE}
+library(ggplot2)
 ggplot(local_activo) +  geom_bar(mapping = aes(x = requires_license, fill = withlicense)) + labs(title= "Número alojamientos sin y con licencia", y = "anuncios", x = "con/sin licencia") + coord_flip() + scale_fill_discrete(name="Experimental\nCondition", breaks=c("ctrl","wdw"), labels=c("Control", "Treatment 1"))
 
 ggplot(local_activo) +  geom_bar(mapping = aes(x = room_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de habitación y con/sin licencia", y = "anuncios", x = "" ) + coord_flip()
@@ -162,6 +127,7 @@ ggplot(local_activo) +  geom_bar(mapping = aes(x = accommodates, fill = withlice
 ```
 
 ## Anfitriones en Airbnb
+
 ```{r, echo = FALSE, warning=FALSE}
 # To change plot order of bars, change levels in underlying factor
 reorder_size <- function(x) {
@@ -177,19 +143,27 @@ anfitriones_anuncios <- data.frame(nanuncios) # crea data frame
 anfitriones_anuncios$host_id <- row.names(nanuncios)
 
 # gráfico 
-ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = nanuncios)) 
-+
-  labs(x = "Número de anuncios", y = "anfitrion")
+ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = Freq)) + labs(x = "Número de anuncios", y = "anfitrion")
     
 # exporta datos a csv
 # write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") 
 ```
 
 ### Los anfitriones con más alojamientos
+
 ```{r table_propietarios, echo = FALSE}
+# install package "knitr" and "rmarkdown" if not installed
+# install.packages("knitr")
+# install.packages("rmarkdown")
+
+# Load "knitr"
 library(knitr,quietly=T)
-kable(as.data.frame(propietarios_nalojamientos[1:20,]),caption = "Los 20 anfitriones con más alojamientos (id)")
-kable(as.data.frame(anfitriones_anuncios[1:20,1:2]),caption = "Los 20 anfitriones con más alojamientos (id)")
+
+propietarios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+propietarios <- propietarios[order(-propietarios)] #reordena de mayor a menor
+propietarios_nalojamientos <- data.frame(propietarios) # crea data frame
+
+kable(as.data.frame(propietarios_nalojamientos[1:20,]),caption = "Los 20 anfitriones con más alojamientos (id)",col.names = c("host_id","alojamientos"))
 
 # nalojamientos <- donostia %>%
 #   group_by(host_id) %>%
@@ -200,7 +174,8 @@ kable(as.data.frame(anfitriones_anuncios[1:20,1:2]),caption = "Los 20 anfitrione
 
 ### Los anfitriones con más plazas
 
-```{r table_anfitriones_2, echo = FALSE}
+```{r table_anfitriones_2, echo = FALSE, warning=FALSE}
+library(dplyr)
 # 1: filter to keep three states.  
 # basic_summ = filter(mprices, state %in% c("California", "New York", "Illinois"))
  
@@ -208,16 +183,12 @@ kable(as.data.frame(anfitriones_anuncios[1:20,1:2]),caption = "Los 20 anfitrione
 naccommodates = group_by(local_activo, host_id)
  
 # 3: calculate the three summary metrics
-naccommodates = summarise(naccommodates, 
-                        accommodates_sum = sum(accommodates)
-                  )
-attach(naccommodates)
-naccommodates <- naccommodates[order(-accommodates_sum),] 
-attach(local_activo)
-
+naccommodates = summarise( naccommodates, accommodates_sum = sum(accommodates) )
+naccommodates <- naccommodates[with(naccommodates, order(-accommodates_sum)), ]
+  
 ggplot(naccommodates) +
   geom_bar(stat='identity', aes(x = reorder(host_id,accommodates_sum), y = accommodates_sum)) + coord_flip() +
-  labs(x = "anfitriones", y = "anuncios", title= "número de anuncios por anfitrión" ) 
+  labs(x = "anfitriones", y = "nº anuncios", title= "número de plazas por anfitrión" ) 
 # + scale_y_continuous(breaks=seq(0,300,10))
 ```
 
@@ -231,7 +202,34 @@ Los 50 primeros anfitriones (`r format(round(100*50/length(levels(as.factor(dono
 Los 100 primeros anfitriones (`r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1)`% del total de plazas).
 
 ```{r table_anfitriones_3, echo = FALSE}
-kable(naccommodates[1:30,],caption = "Los 30 anfitriones con más alojamientos (id)")
+kable(naccommodates[1:30,],caption = "Los 30 anfitriones con más alojamientos (id) tienen n plazas (accomodates)",col.names = c("host_id","plazas"))
+```
+
+### Número de reviews por cada alojamiento
+
+```{r, echo = FALSE, warning=FALSE}
+nreviews <- table(reviews$listing_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+nreviews  <- nreviews [order(-nreviews)] #reordena de mayor a menor
+reviews_listings <- data.frame(nreviews) # crea data frame
+reviews_listings$listing_id <- row.names(nreviews) # this value is the variable "number_of_reviews" in the listings file
+
+# gráfico
+# test
+
+ggplot(reviews_listings) + geom_bar(stat='identity', aes(x = reorder(listing_id,-Freq), y = Freq)) + labs(x = "Número de reviews", y = "anuncios (id)")
+
+ggplot(local_activo) + geom_bar(stat='identity', aes(x = reorder(id,-number_of_reviews), y = number_of_reviews)) + labs(x = "Número de reviews", y = "anuncios (id)") 
+
+ggplot(local_activo[local_activo$city==local_activo_name,]) + geom_point(mapping = aes(x = reviews_per_month, y = number_of_reviews, fill = accommodates))
+
+ggplot(local_activo) + geom_point(mapping = aes(x = reviews_per_month, y = number_of_reviews, fill = accommodates))
+
+ggplot(local_activo) + geom_point(mapping = aes(x = host_listings_count, y = number_of_reviews, fill = accommodates))
+
+ggplot(local_activo) + geom_point(mapping = aes(x = availability_365, y = number_of_reviews, fill = accommodates))
+
+# exporta datos a csv
+# write.csv(reviews_listings, "data/output/reviews_by_listing_.csv") 
 ```
 
 ### Precio por noche
@@ -295,6 +293,7 @@ ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommo
 
 ## Otros
 ```{r, echo = FALSE, warning=FALSE}
+
 ggplot(local_activo) + geom_bar(mapping = aes(reorder_size(host_listings_count), fill = withlicense))
 ggplot(local_activo) + geom_bar(mapping = aes(x = host_total_listings_count))
 
@@ -328,9 +327,7 @@ ggplot(local_activo) + geom_point(mapping = aes(x = cancellation_policy, y = rev
 ggplot(local_activo) + geom_point(mapping = aes(x = accommodates, y = calculated_host_listings_count, shape = property_type, color = withlicense), position = "jitter")
 ggplot(local_activo) + geom_point(mapping = aes(x = accommodates, y = number_of_reviews, shape = property_type, color = withlicense), position = "jitter")
 
-ggplot(local_activo) + 
-  geom_point(mapping = aes(x = property_type, y = number_of_reviews)) + 
-  facet_wrap(~ withlicense, ncol= 2) + coord_flip()
+ggplot(local_activo[local_activo$city==local_activo_name,]) + geom_point(mapping = aes(x = reviews_per_month, y = number_of_reviews, fill = accommodates))
 
 ggplot(local_activo) + 
   stat_summary(
@@ -361,3 +358,44 @@ ggplot(data = local_activo) +
   geom_point(mapping = aes(x = room_type, y = accommodates, color = withlicense),  position = "jitter")  + coord_flip()
 ```
 
+```{r, include=FALSE, cache = TRUE}
+# Probando a separar los datos de las amenities sin éxitoo
+# están en este formato "{TV,Internet,"Wireless Internet",Kitchen}"
+
+# donostia[,35]
+# grep("phone",as.character(donostia[6,35]))
+# donostia$email <- grep("email",donostia[,35])
+# donostia_features <- data.frame(as.character(donostia[,35]))
+# donostia_features$email <- data.frame(grep("phone",as.character(donostia[,35])))
+# n = nrow(donostia_features)
+# #loop por todos los datos y los guarda en las categorías correspondientes
+# for (j in 1:n) {
+#   if(gsub("\\[|\\]|'","",unlist(strsplit(as.character(donostia[j,35]), ", ")))[1]=="email") {
+#     donostia_features$email[j] = 1 
+#   } else {
+#     donostia_features$email[j] = 0
+#   }
+# }
+# test = gsub("\\[|\\]|'","",unlist(strsplit(as.character(donostia[1,35]), ", ", fixed = TRUE)))[2]
+# 
+# donostia[,59]
+# grep("TV",as.character(donostia[6,59]))
+# donostia_amenities <- data.frame(as.character(donostia[,59]))
+# 
+# amenity_types = unique(tolower(gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[,59]), ",")))))
+# n = nrow(donostia_amenities)
+# m = length(amenity_types)
+# 
+# #loop por todos los datos y los guarda en las categorías correspondientes
+# for (j in 1:n) {
+#   for (i in 1:m) {
+#     if(gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[j,59]), ",", fixed = TRUE)))[m]=="TV") {
+#       donostia_amenities$tv[j] = 1 
+#     } else {
+#       donostia_amenities$tv[j] = 0
+#     }
+#   }
+# }
+# 
+# gsub("\\{|\\}|\"","",unlist(strsplit(as.character(donostia[1,59]), ",")))[1]
+```
