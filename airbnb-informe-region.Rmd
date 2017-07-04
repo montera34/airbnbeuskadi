@@ -78,7 +78,7 @@ vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
 # barcelonaLicenciaPerCent = nbarcelonalicencia / nbarcelona
 
 #---------------------- Selecciona archivo listings
-#Selecciona regio/lugar a analizar
+#Selecciona región/lugar a analizar en las dos siguientes variables
 local_activo = donostia
 local_activo_name = "Donostia"
 attach(local_activo)
@@ -134,7 +134,6 @@ reorder_size <- function(x) {
   factor(x, levels = names(sort(table(x))))
 }
 
-#ggplot(donostia) +geom_bar(mapping = aes(reorder_size(host_name), fill = withlicense)) + coord_flip() host_name da error porque hay anfitriones que comparten nombre
 ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip() + theme(axis.text.y = element_blank())
 
 nanuncios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
@@ -197,9 +196,9 @@ Los 10 primeros anfitriones (`r format(round(100*10/length(levels(as.factor(loca
 
 Los 20 primeros anfitriones (`r format(round(100*20/length(levels(as.factor(local_activo$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
 
-Los 50 primeros anfitriones (`r format(round(100*50/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(donostia$accommodates), 1), nsmall = 1)`% del total de plazas).
+Los 50 primeros anfitriones (`r format(round(100*50/length(levels(as.factor(local_activo$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
 
-Los 100 primeros anfitriones (`r format(round(100*100/length(levels(as.factor(donostia$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(donostia$accommodates), 1), nsmall = 1)`% del total de plazas).
+Los 100 primeros anfitriones (`r format(round(100*100/length(levels(as.factor(local_activo$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
 
 ```{r table_anfitriones_3, echo = FALSE}
 kable(naccommodates[1:30,],caption = "Los 30 anfitriones con más alojamientos (id) tienen n plazas (accomodates)",col.names = c("host_id","plazas"))
@@ -238,11 +237,11 @@ ggplot(local_activo) + geom_point(mapping = aes(x = availability_365, y = number
 
 ggplot(local_activo) + geom_bar(mapping = aes(reorder_size(price), fill = withlicense)) + coord_flip() #se ve que 120 es e lprecio más popular
 
-# ggplot(donostia) + geom_bar(mapping = aes(x = precio, fill = withlicense)) + coord_flip() #se ve que 120 es e lprecio más popular
+ggplot(local_activo) + geom_bar(mapping = aes(x = precio, fill = withlicense)) + coord_flip() #se ve que 120 es el precio más popular
 
 ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
 
-# ggplot(donostia) + geom_point(mapping = aes(x = precio, y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
+# ggplot(local_activo) + geom_point(mapping = aes(x = precio, y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
 
 # median(na.omit(precio))
 # mean(na.omit(precio))
@@ -270,7 +269,7 @@ ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommo
 ```{r, echo = FALSE, warning=FALSE}
 # # Dotplot: Grouped Sorted and Colored
 # # Sort by mpg, group and color by cylinder
-# x <- donostia[order(donostia$precio),] # sort by precio
+# x <- local_activo[order(local_activo$precio),] # sort by precio
 # x$property_type <- factor(x$property_type) # it must be a factor
 # x$color[x$property_type=="Apartment"] <- "red"
 # x$color[x$property_type=="House"] <- "blue"
@@ -280,7 +279,7 @@ ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommo
 #    xlab="dollars", gcolor="black", color=x$color) 
 # 
 # 
-# y <- donostia[order(donostia$precio),] # sort by mpg
+# y <- local_activo[order(local_activo$precio),] # sort by mpg
 # y$withlicense <- factor(y$withlicense) # it must be a factor
 # y$color[y$pwithlicense==FALSE] <- "red"
 # y$color[y$withlicense==TRUE] <- "blue"
@@ -362,9 +361,9 @@ ggplot(data = local_activo) +
 # Probando a separar los datos de las amenities sin éxitoo
 # están en este formato "{TV,Internet,"Wireless Internet",Kitchen}"
 
-# donostia[,35]
+# local_activodonostia[,35]
 # grep("phone",as.character(donostia[6,35]))
-# donostia$email <- grep("email",donostia[,35])
+# local_activo$email <- grep("email",local_activo[,35])
 # donostia_features <- data.frame(as.character(donostia[,35]))
 # donostia_features$email <- data.frame(grep("phone",as.character(donostia[,35])))
 # n = nrow(donostia_features)
