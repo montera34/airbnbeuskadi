@@ -1,9 +1,16 @@
-El efecto de Airbnb en Donostia – San Sebastián
+Efecto de Airbnb
 ===
 
-Este repositorio contiene toda la información utilizada en el taller [Maps&Data: El efecto Airbnb en datos](https://montera34.com/project/efecto-airbnb-donostia/) realizado en Hirikilabs de Donosti durante los días 3, 4 y 5 de abril de 2017.
+## Taller abril 2017
+
+Este repositorio era alojaba inicialmente toda la información utilizada en el taller [Maps&Data: El efecto Airbnb en datos](https://montera34.com/project/efecto-airbnb-donostia/) realizado en Hirikilabs de Donosti durante los días 3, 4 y 5 de abril de 2017.
 
 Más información sobre los materiales producidos durante el taller en la [Wiki](https://github.com/montera34/airbnbeuskadi/wiki).
+
+## Efecto Airbnb. Nodo data commons. Summerlab'17. Julio 2017
+
+Con la ampliación de la investigación sobre Airbnb en [Efecto Airbnb](https://lab.montera34.com/airbnb) que tendrá lugar durante el Summerlab'17 en Donosti los das 13 y 14 de julio, este repositorio alojará el contenido de diferentes proyectos de captura y análisis de datos.
+
 
 ## Estructura de contenidos por carpetas
 
