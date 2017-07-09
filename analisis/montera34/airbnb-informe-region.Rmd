@@ -22,10 +22,10 @@ library(tidyverse)
 # Carga datos
 
 #introduce tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
-listings <- read.delim("data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos. Salen 3453 pero deberían ser 2847 anuncios.
-listings_simple <- read.delim("data/listings_euskadi_simple.csv",sep = ",")
+# listings <- read.delim("../../data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos. Salen 3453 pero deberían ser 2847 anuncios.
+listings_simple <- read.delim("../../data/listings_euskadi_simple.csv",sep = ",")
 # Load reviews
-reviews <- read.csv("data/original/reviews_euskadi.csv",sep = ",")
+reviews <- read.csv("../../data/original/reviews_euskadi.csv",sep = ",")
 
 # view data basics
 # str(listings)
@@ -51,7 +51,7 @@ vitoria_simple = listings_simple[listings_simple$city=="Vitoria",]
 zarautz_simple = listings_simple[listings_simple$city=="Zarautz",]
 
 #número de pisos en las capitales
-ntotal = nrow(listings) #numero de pisos
+ntotal = nrow(listings_simple) #numero de pisos
 ndonostia = nrow(donostia)
 nbilbao = nrow(bilbao)
 nvitoria = nrow(vitoria)
@@ -101,7 +101,7 @@ En las capitales tenemos:
  Dispone de `r sum(na.omit(vitoria_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`.
 
 
-Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es 18.0% de un total de 17369 alojamientos según datos de insideairbnb. Madrid (7446 alojamientos) y Mallorca (11271 alojamientos) no tienen indicado si tienen licencia.
+Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es 18.0% de un total de 17.369 alojamientos según datos de insideairbnb. Madrid (7.446 alojamientos) y Mallorca (11.271 alojamientos) no tienen indicado si tienen licencia.
 
 ```{r, echo = FALSE, warning=FALSE}
 # Por no repetir operaciones, copio pego el resultado arriba:
