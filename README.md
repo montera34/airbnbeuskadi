@@ -15,8 +15,15 @@ Con la ampliación de la investigación sobre Airbnb en [Efecto Airbnb](https://
 ## Estructura de contenidos por carpetas
 
     prepare-segmented-files.R   Script de R para generar los archivos .csv por ciudades y simplificados
-    airbnb-informe-region.Rmd   Archivo Rmd para generar informe automatizado en .html en Rstudio con Knitr sobre una ciudad
-    *.html                      Informes de ciudades generados por airbnb-informe-region.Rmd
+    
+    analisis/
+      |
+      |_ montera34/              Datos sin tratar, tal como los encontramos en las fuentes
+         |_airbnb-...-region.Rmd Archivo Rmd para generar informe automatizado en .html en Rstudio con Knitr sobre una region
+         |_airbnb-...-ciudad.Rmd Archivo Rmd para generar informe automatizado en .html en Rstudio con Knitr sobre un municipio
+         |_*.html                Informes de ciudades generados por airbnb-informe-ciudad.Rmd
+      |_ terraferida/            Scripts de análisis de datos en R
+
 
     data/                       Versiones limpias de las bases de datos de la carpeta original/
       |

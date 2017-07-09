@@ -1,11 +1,14 @@
 ---
-title: "Airbnb en Euskadi"
-author: "montera34"
-date: "April 12, 2017"
+title: "Efecto Airbnb en Bilbao"
 output: html_document
 ---
 
 ```{r setup, include=FALSE, cache = TRUE}
+# Este documento en Rmarkdown está pensado para producir un informe a partir de datos de Airbnb de InsideAirbnb.com (http://insideairbnb.com/)
+
+# Selecciona región/lugar a analizar en las dos siguientes variables
+local_activo_name = "Bilbao" #cambia 'Zarautz' por el municipio que quieras analizar
+
 # Instala y carga librerías
 
 # la primera vez necesitas instalar
@@ -21,109 +24,48 @@ library(tidyverse)
 
 # Carga datos
 
-#introduce tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
-listings <- read.delim("data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos. Salen 3453 pero deberían ser 2847 anuncios.
-listings_simple <- read.delim("data/listings_euskadi_simple.csv",sep = ",")
+# introduce el path de tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
+listings <- read.delim("../../data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos. Salen 3453 pero deberían ser 2847 anuncios.
+listings_simple <- read.delim("../../data/listings_euskadi_simple.csv",sep = ",")
 # Load reviews
-reviews <- read.csv("data/original/reviews_euskadi.csv",sep = ",")
-
-# view data basics
-# str(listings)
-# head(listings)
-# añade variables para acceso fácil
-# summary(listings)
+reviews <- read.csv("../../data/original/reviews_euskadi.csv",sep = ",")
 
 attach(listings_simple)
 
-#Calcula el número de municipios presentes en listings
-citieslevels = levels(listings_simple$city)
-cities = data.frame(citieslevels) #eran 330 municipios y tras limpieza se quedaron en 270
-ncities = nrow(cities) #número de municipios diferentes
+# Selecciona archivo listings
+local_activo = listings_simple[listings_simple$city==local_activo_name,]
 
-#listados por capitales
-donostia = listings_simple[listings_simple$city=="Donostia",]
-bilbao = listings_simple[listings_simple$city=="Bilbao",]
-vitoria = listings_simple[listings_simple$city=="Vitoria",]
-#exports only some columns to avoid problems with scapes in data
-donostia_simple = listings_simple[listings_simple$city=="Donostia",]
-bilbao_simple = listings_simple[listings_simple$city=="Bilbao",]
-vitoria_simple = listings_simple[listings_simple$city=="Vitoria",]
-
-#número de pisos en las capitales
-ntotal = nrow(listings) #numero de pisos
-ndonostia = nrow(donostia)
-nbilbao = nrow(bilbao)
-nvitoria = nrow(vitoria)
-
-#otras ciudades
-# nmadrid = nrow(listings_madrid)
-# nbarcelona = nrow(listings_barcelona)
-# nmallorca = nrow(listings_mallorca)
-
-#calcula alojamientos con licencia
-ntotallicencia = nrow(listings_simple[listings_simple$withlicense==TRUE,])
-ndonostialicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Donostia",])
-nbilbaolicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Bilbao",])
-nvitorialicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Vitoria-Gasteiz",])
-
-# nbarcelonalicencia = nrow(listings_barcelona[listings_barcelona$license!= "",])
-# madrid y mallorca no cuentan con licencias turísticas en los alojamientos de airbnb
-
-# % pisos con licencia
-totalLicenciaPerCent = ntotallicencia / ntotal
-donostiaLicenciaPerCent = ndonostialicencia / ndonostia
-bilbaoLicenciaPerCent = nbilbaolicencia / nbilbao
-vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
-
-# barcelonaLicenciaPerCent = nbarcelonalicencia / nbarcelona
-
-#---------------------- Selecciona archivo listings
-#Selecciona región/lugar a analizar en las dos siguientes variables
-local_activo = donostia
-local_activo_name = "Donostia"
 attach(local_activo)
-# si ponemos 
-# local_activo = donostia 
-# todos los análisis se referirán a Donostia
 ```
 
-# Airbnb en Euskadi
-Airbnb en Euskadi, según los datos obtenidos por InsideAirbnb, contiene `r ntotal` anuncios en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
+Este informe se ha generado automáticamente con R a partir del [script de Rmarkdown](https://github.com/montera34/airbnbeuskadi/tree/master/analisis/montera34/airbnb-informe-ciudad.Rmd) disponible en el [repositorio airbnbeuskadi](https://github.com/montera34/airbnbeuskadi/).
 
-En las capitales tenemos:
+## Datos
 
- + **Donostia - San Sebastián** `r ndonostia` anuncios (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). 
- Dispone de `r sum(na.omit(donostia_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(donostia$host_id)))`.
- + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio).
- Dispone de `r sum(na.omit(bilbao_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(bilbao$host_id)))`.
- + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
- Dispone de `r sum(na.omit(vitoria_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`.
++ InsideAirbnb.com/euskadi
++ Fecha scraping: 2017-03-24
 
+## Resumen
 
-Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es 18.0% de un total de 17369 alojamientos según datos de insideairbnb. Madrid (7446 alojamientos) y Mallorca (11271 alojamientos) no tienen indicado si tienen licencia.
+En **`r local_activo_name`** hay publicados `r nrow(local_activo)` anuncios de Airbnb, que tienen capacidad para `r sum(na.omit(local_activo$accommodates)) ` personas (accommodates). 
 
-```{r, echo = FALSE, warning=FALSE}
-# Por no repetir operaciones, copio pego el resultado arriba:
-# Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es `r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos según datos de insideairbnb. Madrid (`r nmadrid` alojamientos) y Mallorca (`r nmallorca` alojamientos) no tienen indicado si tienen licencia. 
-``` 
+De esos anuncios `r nrow(local_activo[local_activo$withlicense==TRUE,])` han sido dados de alta en el Registro de Empresas Turísticas del Gobierno Vasco (lo que supone un `r format(round(100*nrow(local_activo[local_activo$withlicense==TRUE,])/nrow(local_activo), 1), nsmall = 1)` % del municipio).
 
-# Efecto Airbnb en `r local_activo_name`
-
-En `r local_activo_name` existen `r length(levels(as.factor(local_activo$host_id)))` anfitriones con alojamientos disponibles en Airbnb. 
+Estos anuncios (listings, en la terminología de Airbnb) han sido publicados por `r length(levels(as.factor(local_activo$host_id)))` anfitriones. 
 
 ```{r, echo = FALSE, warning=FALSE}
 library(ggplot2)
-ggplot(local_activo) +  geom_bar(mapping = aes(x = requires_license, fill = withlicense)) + labs(title= "Número alojamientos sin y con licencia", y = "anuncios", x = "con/sin licencia") + coord_flip() + scale_fill_discrete(name="Experimental\nCondition", breaks=c("ctrl","wdw"), labels=c("Control", "Treatment 1"))
+ggplot(local_activo) +  geom_bar(mapping = aes(x = requires_license, fill = withlicense)) + labs(title= "Número alojamientos sin y con registro", y = "anuncios", x = "con/sin registro") + coord_flip() + scale_fill_discrete(name="Experimental\nCondition", breaks=c("ctrl","wdw"), labels=c("Control", "Treatment 1"))
 
-ggplot(local_activo) +  geom_bar(mapping = aes(x = room_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de habitación y con/sin licencia", y = "anuncios", x = "" ) + coord_flip()
+ggplot(local_activo) +  geom_bar(mapping = aes(x = room_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de habitación y con/sin registro", y = "anuncios", x = "" ) + coord_flip()
 
-ggplot(local_activo) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin licencia" ) + coord_flip()
+ggplot(local_activo) +  geom_bar(mapping = aes(x = property_type, fill = withlicense)) + labs(title= "Nº alojamientos según tipo de alojamiento y con/sin registro" ) + coord_flip()
 
-ggplot(local_activo) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según sus plazas sin y con licencia" ) + facet_wrap(~ withlicense, ncol= 2) + coord_flip() 
+ggplot(local_activo) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según sus plazas sin y con registro" ) + facet_wrap(~ withlicense, ncol= 2) + coord_flip() 
 # add this for nicer y axis
 # + scale_x_continuous(breaks=seq(0,12,1))
 
-ggplot(local_activo) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas sin y con licencia" ) + scale_x_continuous(breaks=seq(0,16,1)) + coord_flip()
+ggplot(local_activo) +  geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + labs(title= "Número alojamientos según su nº de plazas sin y con registro" ) + scale_x_continuous(breaks=seq(0,16,1)) + coord_flip()
 ```
 
 ## Anfitriones en Airbnb
@@ -134,15 +76,16 @@ reorder_size <- function(x) {
   factor(x, levels = names(sort(table(x))))
 }
 
-ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip() + theme(axis.text.y = element_blank())
+ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id), fill = withlicense)) + coord_flip() + theme(axis.text.y = element_blank()) + labs(y = "Número de anuncios", x = "anfitrion")
 
+# Otra forma de hacer lo mismo
 nanuncios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
 nanuncios <- nanuncios[order(-nanuncios)] #reordena de mayor a menor
 anfitriones_anuncios <- data.frame(nanuncios) # crea data frame
 anfitriones_anuncios$host_id <- row.names(nanuncios)
 
-# gráfico 
-ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = Freq)) + labs(x = "Número de anuncios", y = "anfitrion")
+# gráfico (repite el anterior, por eso está comentado)
+# ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = Freq)) + labs(x = "Número de anuncios", y = "anfitrion") + coord_flip()
     
 # exporta datos a csv
 # write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") 
@@ -150,7 +93,7 @@ ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = Fr
 
 ### Los anfitriones con más alojamientos
 
-```{r table_propietarios, echo = FALSE}
+```{r table_propietarios, echo = FALSE, warning=FALSE}
 # install package "knitr" and "rmarkdown" if not installed
 # install.packages("knitr")
 # install.packages("rmarkdown")
@@ -186,7 +129,7 @@ naccommodates = summarise( naccommodates, accommodates_sum = sum(accommodates) )
 naccommodates <- naccommodates[with(naccommodates, order(-accommodates_sum)), ]
   
 ggplot(naccommodates) +
-  geom_bar(stat='identity', aes(x = reorder(host_id,accommodates_sum), y = accommodates_sum)) + coord_flip() +
+  geom_bar(stat='identity', aes(x = reorder(host_id,accommodates_sum), y = accommodates_sum)) + coord_flip() + theme(axis.text.y = element_blank()) + 
   labs(x = "anfitriones", y = "nº anuncios", title= "número de plazas por anfitrión" ) 
 # + scale_y_continuous(breaks=seq(0,300,10))
 ```
@@ -201,25 +144,29 @@ Los 50 primeros anfitriones (`r format(round(100*50/length(levels(as.factor(loca
 Los 100 primeros anfitriones (`r format(round(100*100/length(levels(as.factor(local_activo$host_id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
 
 ```{r table_anfitriones_3, echo = FALSE}
-kable(naccommodates[1:30,],caption = "Los 30 anfitriones con más alojamientos (id) tienen n plazas (accomodates)",col.names = c("host_id","plazas"))
+kable(naccommodates[1:30,],caption = "Los 30 anfitriones (host_id) con más alojamientos tienen n plazas (accomodates)",col.names = c("host_id","plazas"))
 ```
 
 ### Número de reviews por cada alojamiento
 
 ```{r, echo = FALSE, warning=FALSE}
-nreviews <- table(reviews$listing_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+# TODO: hace falta filtrar las reviews por los listings que están presentes en el municipio analizado
+
+# Selecciona las reviews de los listings que están local_activo
+reviews_activo = reviews[(reviews$listing_id %in%  local_activo$id),]
+
+nreviews <- table(reviews_activo$listing_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
 nreviews  <- nreviews [order(-nreviews)] #reordena de mayor a menor
 reviews_listings <- data.frame(nreviews) # crea data frame
 reviews_listings$listing_id <- row.names(nreviews) # this value is the variable "number_of_reviews" in the listings file
 
 # gráfico
-# test
 
-ggplot(reviews_listings) + geom_bar(stat='identity', aes(x = reorder(listing_id,-Freq), y = Freq)) + labs(x = "Número de reviews", y = "anuncios (id)")
+# Imprime el número de reviews de todos los pisos que tienen reviews en local_activo
+ggplot(reviews_listings) + geom_bar(stat='identity', aes(x = reorder(listing_id,-Freq), y = Freq)) + labs(y = "Número de reviews", x = "anuncios (id)") + coord_flip() 
 
-ggplot(local_activo) + geom_bar(stat='identity', aes(x = reorder(id,-number_of_reviews), y = number_of_reviews)) + labs(x = "Número de reviews", y = "anuncios (id)") 
-
-ggplot(local_activo[local_activo$city==local_activo_name,]) + geom_point(mapping = aes(x = reviews_per_month, y = number_of_reviews, fill = accommodates))
+# Imprime el número de reviews de todos los pisos incluso los que tienen 0 reviews
+ggplot(local_activo) + geom_bar(stat='identity', aes(x = reorder(id,-number_of_reviews), y = number_of_reviews)) + labs(y = "Número de reviews", x = "anuncios (id)") + coord_flip() 
 
 ggplot(local_activo) + geom_point(mapping = aes(x = reviews_per_month, y = number_of_reviews, fill = accommodates))
 
@@ -235,11 +182,11 @@ ggplot(local_activo) + geom_point(mapping = aes(x = availability_365, y = number
 
 ```{r, echo = FALSE, warning=FALSE}
 
-ggplot(local_activo) + geom_bar(mapping = aes(reorder_size(price), fill = withlicense)) + coord_flip() #se ve que 120 es e lprecio más popular
+# ggplot(local_activo) + geom_bar(mapping = aes(reorder_size(price), fill = withlicense)) + coord_flip() + labs(x = "precio", y = "nº anuncios", title= "número de anuncios con un determinado precio por noche ($)" ) 
 
-ggplot(local_activo) + geom_bar(mapping = aes(x = precio, fill = withlicense)) + coord_flip() #se ve que 120 es el precio más popular
+ggplot(local_activo) + geom_bar(mapping = aes(x = precio, fill = withlicense)) + coord_flip() + labs(x = "precio", y = "nº anuncios", title= "número de anuncios con un determinado precio por noche ($)" ) 
 
-ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
+ggplot(local_activo) + geom_point(mapping = aes(precio, y = accommodates, color = withlicense),  position = "jitter") + coord_flip() + labs(x = "precio", y = "plazas por anuncio", title= "número de anuncios con un determinado precio por noche ($) vs plazas" ) 
 
 # ggplot(local_activo) + geom_point(mapping = aes(x = precio, y = accommodates, color = withlicense),  position = "jitter") + coord_flip()
 
@@ -257,11 +204,11 @@ ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommo
 # polygon(d, col="grey", border="grey") 
 # 
 # d <- density(na.omit(precio[withlicense==TRUE]))
-# plot(d, main="Kernel Density of prices con licencia", xlim = c(0,1000), ylim = c(0,0.01))
+# plot(d, main="Kernel Density of prices con registro", xlim = c(0,1000), ylim = c(0,0.01))
 # polygon(d, col="grey", border="grey") 
 # 
 # d <- density(na.omit(precio[withlicense==FALSE]))
-# plot(d, main="Kernel Density of prices sin licencia", xlim = c(0,1000), ylim = c(0,0.01))
+# plot(d, main="Kernel Density of prices sin registro", xlim = c(0,1000), ylim = c(0,0.01))
 # polygon(d, col="grey", border="grey") 
 
 ```
@@ -284,7 +231,7 @@ ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommo
 # y$color[y$pwithlicense==FALSE] <- "red"
 # y$color[y$withlicense==TRUE] <- "blue"
 # dotchart(y$precio,labels=row.names(y),cex=.7,groups= y$withlicense,
-#    main="Precio por noche para alojamientos con y sin licencia",
+#    main="Precio por noche para alojamientos con y sin registro",
 #    xlab="dollars", gcolor="black", color=x$color) 
 
 ```
@@ -293,8 +240,9 @@ ggplot(local_activo) + geom_point(mapping = aes(reorder_size(price), y = accommo
 ## Otros
 ```{r, echo = FALSE, warning=FALSE}
 
-ggplot(local_activo) + geom_bar(mapping = aes(reorder_size(host_listings_count), fill = withlicense))
-ggplot(local_activo) + geom_bar(mapping = aes(x = host_total_listings_count))
+ggplot(local_activo) + geom_bar(mapping = aes(host_listings_count, fill = withlicense)) + labs(x = "anuncios por anfitrión", y = "nº anuncios", title= "distribución de nº anuncios por anfitrión con host_listings_count" ) 
+
+ggplot(local_activo) + geom_bar(mapping = aes(host_total_listings_count, fill = withlicense)) + labs(x = "anuncios por anfitrión", y = "nº anuncios", title= "distribución de nº anuncios por anfitrión con host_total_listings_count" ) 
 
 ggplot(local_activo) + 
   stat_summary(
@@ -302,14 +250,12 @@ ggplot(local_activo) +
     fun.ymin = min,
     fun.ymax = max,
     fun.y = median
-  ) + coord_flip()
+  ) + coord_flip() + labs(y = "plazas", x = "tipo de alojamiento", title= "nº plazas por tipo de alojamiento" ) 
 
 ggplot(local_activo) + geom_bar(mapping = aes(x = room_type, fill = withlicense)) + coord_flip()
 
 ggplot(local_activo) + geom_bar(mapping = aes(x = accommodates, fill = withlicense)) + coord_flip()
 ggplot(local_activo) + geom_bar(mapping = aes(x = bed_type, fill = withlicense )) + coord_flip()
-
-ggplot(local_activo) + geom_bar(mapping = aes(x = number_of_reviews, fill = withlicense )) + coord_flip()
 
 ggplot(local_activo) + geom_bar(mapping = aes(x = review_scores_value, fill = withlicense )) + coord_flip()
 ggplot(local_activo) + geom_bar(mapping = aes(x = instant_bookable, fill = withlicense )) + coord_flip()

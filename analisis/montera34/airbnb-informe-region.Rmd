@@ -1,0 +1,109 @@
+---
+title: "Airbnb en Euskadi"
+author: "montera34"
+date: "April 12, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE, cache = TRUE}
+# Instala y carga librerías
+
+# la primera vez necesitas instalar
+# install.packages("tidyverse")
+
+library(tidyverse)
+
+# library(ggplot2) #ya incluido en tidyverse
+# library(dplyr) #ya incluido en tidyverse
+
+# carga librería para reagrupar tablas de datos y hacer "melt"
+# library("reshape2") #no sé la diferencia con "reshape"
+
+# Carga datos
+
+#introduce tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
+listings <- read.delim("data/listings_euskadi.tsv",sep = "\t") # Algo no funciona, por incluir comillas en los textos. Salen 3453 pero deberían ser 2847 anuncios.
+listings_simple <- read.delim("data/listings_euskadi_simple.csv",sep = ",")
+# Load reviews
+reviews <- read.csv("data/original/reviews_euskadi.csv",sep = ",")
+
+# view data basics
+# str(listings)
+# head(listings)
+# añade variables para acceso fácil
+# summary(listings)
+
+attach(listings_simple)
+
+#Calcula el número de municipios presentes en listings
+citieslevels = levels(listings_simple$city)
+cities = data.frame(citieslevels) #eran 330 municipios y tras limpieza se quedaron en 270
+ncities = nrow(cities) #número de municipios diferentes
+
+#listados por capitales
+donostia = listings_simple[listings_simple$city=="Donostia",]
+bilbao = listings_simple[listings_simple$city=="Bilbao",]
+vitoria = listings_simple[listings_simple$city=="Vitoria",]
+#exports only some columns to avoid problems with scapes in data
+donostia_simple = listings_simple[listings_simple$city=="Donostia",]
+bilbao_simple = listings_simple[listings_simple$city=="Bilbao",]
+vitoria_simple = listings_simple[listings_simple$city=="Vitoria",]
+zarautz_simple = listings_simple[listings_simple$city=="Zarautz",]
+
+#número de pisos en las capitales
+ntotal = nrow(listings) #numero de pisos
+ndonostia = nrow(donostia)
+nbilbao = nrow(bilbao)
+nvitoria = nrow(vitoria)
+
+#otras ciudades
+# nmadrid = nrow(listings_madrid)
+# nbarcelona = nrow(listings_barcelona)
+# nmallorca = nrow(listings_mallorca)
+
+#calcula alojamientos con licencia
+ntotallicencia = nrow(listings_simple[listings_simple$withlicense==TRUE,])
+ndonostialicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Donostia",])
+nbilbaolicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Bilbao",])
+nvitorialicencia = nrow(listings_simple[listings_simple$withlicense==TRUE&city=="Vitoria-Gasteiz",])
+
+# nbarcelonalicencia = nrow(listings_barcelona[listings_barcelona$license!= "",])
+# madrid y mallorca no cuentan con licencias turísticas en los alojamientos de airbnb
+
+# % pisos con licencia
+totalLicenciaPerCent = ntotallicencia / ntotal
+donostiaLicenciaPerCent = ndonostialicencia / ndonostia
+bilbaoLicenciaPerCent = nbilbaolicencia / nbilbao
+vitoriaLicenciaPerCent = nvitorialicencia / nvitoria
+
+# barcelonaLicenciaPerCent = nbarcelonalicencia / nbarcelona
+
+#---------------------- Selecciona archivo listings
+#Selecciona región/lugar a analizar en las dos siguientes variables
+local_activo = zarautz_simple 
+local_activo_name = "Zarautz"
+attach(local_activo)
+# si ponemos 
+# local_activo = donostia 
+# todos los análisis se referirán a Donostia
+```
+
+# Airbnb en Euskadi
+Airbnb en Euskadi, según los datos obtenidos por InsideAirbnb, contiene `r ntotal` anuncios en `r ncities` municipios, de ellos `r ntotallicencia ` tienen licencia de alojamiento turístico (`r format(round(100*totalLicenciaPerCent, 1), nsmall = 1)`%). 
+
+En las capitales tenemos:
+
+ + **Donostia - San Sebastián** `r ndonostia` anuncios (`r format(round(100*ndonostia/ntotal, 1), nsmall = 1) ` % del total), de esos alojamientos tienen licencia `r ndonostialicencia` (`r format(round(100*donostiaLicenciaPerCent, 1), nsmall = 1)` % del municipio). 
+ Dispone de `r sum(na.omit(donostia_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(donostia$host_id)))`.
+ + **Bilbao** `r nbilbao` (`r format(round(100*nbilbao/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nbilbaolicencia` (`r format(round(100*bilbaoLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ Dispone de `r sum(na.omit(bilbao_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(bilbao$host_id)))`.
+ + **Vitoria - Gasteiz** `r nvitoria` (`r format(round(100*nvitoria/ntotal, 1), nsmall = 1) `% del total), de esos alojamientos tienen licencia `r nvitorialicencia` (`r format(round(100*vitoriaLicenciaPerCent, 1), nsmall = 1)` % del municipio).
+ Dispone de `r sum(na.omit(vitoria_simple$accommodates)) ` plazas. Anfitriones con alojamiento listado `r length(levels(as.factor(vitoria$host_id)))`.
+
+
+Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es 18.0% de un total de 17369 alojamientos según datos de insideairbnb. Madrid (7446 alojamientos) y Mallorca (11271 alojamientos) no tienen indicado si tienen licencia.
+
+```{r, echo = FALSE, warning=FALSE}
+# Por no repetir operaciones, copio pego el resultado arriba:
+# Por comparar con otras ciudades, el porcentaje de alojamientos con licencia turística en Barcelona es `r format(round(100*barcelonaLicenciaPerCent, 1), nsmall = 1)`% de un total de `r nbarcelona` alojamientos según datos de insideairbnb. Madrid (`r nmadrid` alojamientos) y Mallorca (`r nmallorca` alojamientos) no tienen indicado si tienen licencia. 
+``` 
