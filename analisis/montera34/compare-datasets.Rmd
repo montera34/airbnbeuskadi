@@ -1,31 +1,30 @@
 ---
-title: "Camparando bases de datos"
+title: "Comparando bases de datos"
 output: html_document
 ---
 
-Este documento en Rmarkdown está pensado para comparar dos bases de datos de Airbnb y poder evaluar los métodos de scraping.  
+Este documento generado con Rmarkdown ([/analisis/montera34/compare-datasets.Rmd](https://github.com/montera34/airbnbeuskadi/blob/master/analisis/montera34/compare-datasets.Rmd)) está pensado para comparar dos bases de datos de Airbnb y poder evaluar los métodos de scraping.  
 
 ```{r setup, include=FALSE, cache = TRUE}
 
 # Instala y carga librerías
 library(tidyverse)
 
-# carga librería para reagrupar tablas de datos y hacer "melt"
-# library("reshape2") #no sé la diferencia con "reshape"
-
 # Carga datos
 
 # introduce el path de tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
-listings_simple_1 <- read.delim("../../data/listings_gipuzkoa.csv",sep = ",")
-listings_simple_2 <- read.delim("../../data/original/ng_gipuzkoa-20170401-0542.csv",sep = ",")
+# listings_simple_1 <- read.delim("../../data/listings_gipuzkoa.csv",sep = ",")
+listings_simple_1 <- read.delim("../../data/listings_donostia_simple.csv",sep = ",")
+# listings_simple_2 <- read.delim("../../data/original/ng_gipuzkoa-20170401-0542.csv",sep = ",")
+listings_simple_2 <- read.delim("../../data/ng_gipuzkoa-20170401-0542_donostia.csv",sep = ",")
 ```
 
-+ DB1: Los datos de **Inside Airbnb** tienen `r nrow(listings_simple_1)` anuncios en Gipuzkoa (data/listings_gipuzkoa.csv) seleccionados manualmente en QGIS para permitir seleccionar los que está ngeoposicionados en el mar y por tanto fuera del contorno de la provincia.
-+ DB2: Los datos extraídos de la **API de Airbnb** por mapa contienen `r nrow(listings_simple_2)` anuncios en Gipuzkoa.
++ DB1: Los datos de **Inside Airbnb** tienen `r nrow(listings_simple_1)` anuncios en Donostia (data/listings_donostia_simple.csv) seleccionados manualmente en QGIS para permitir seleccionar los que está ngeoposicionados en el mar y por tanto fuera del contorno de la provincia.
++ DB2: Los datos extraídos de la **API de Airbnb** por mapa contienen `r nrow(listings_simple_2)` anuncios en Donostia.
 
-¿qué anuncios tienen en común? ¿cuales no?
+¿Qué anuncios tienen en común? ¿cuales no?
 
-# Estas son las bases de datos en el mapa
+## Estas son las bases de datos sobre el mapa
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 # loading the required packages
@@ -45,18 +44,10 @@ db1_in_2 <- listings_simple_1[listings_simple_1$id %in% listings_simple_2$ID,]
 # de 2 que no están en 1
 db2_not_in_1 <- listings_simple_2[!(listings_simple_2$ID %in% listings_simple_1$id),]
 db2_in_1 <- listings_simple_2[listings_simple_2$ID %in% listings_simple_1$id,]
-
-# la <- data.frame(Subject=c(12323,21221,42342,2231), Response=c("rubius","lola","pablo","ernseto"))
-# lb <- data.frame(Subject=c(12323,42342,2231,908), Response=c("rubius","pablo","ernseto","alicia"))
-# 
-# lb[lb$Subject %in% la$Subject,]
-# 
-# la[!(la$Subject %in% lb$Subject),]
-# lb[!(lb$Subject %in% la$Subject),]
 ```
 
 
-```{r unique_ids, include=FALSE, cache = TRUE}
+```{r unique_ids, include=FALSE, cache = FALSE}
 unique_listings_1 <- as.data.frame(listings_simple_1$id)
 names(unique_listings_1)<-c("id")
                          
@@ -69,8 +60,6 @@ unique_listings_p <- rbind(unique_listings_1, unique_listings_2)
 unique_listings <- as.data.frame(unique(unique_listings_p$id))
 ```
 
-
-
 DB1 tiene **`r nrow(listings_simple_1)`** anuncios.
 
 DB2 tiene **`r nrow(listings_simple_2)`** anuncios.
@@ -81,51 +70,48 @@ B. La DB1 tiene **`r nrow(db1_not_in_2)`** anuncios que no están en la DB2.
 
 C. La DB2 tiene **`r nrow(db2_not_in_1)`** anuncios que no están en la DB1.
 
-Hay, por tanto **`r nrow(db1_not_in_2) + nrow(db2_not_in_1) + nrow(db2_in_1)`** (A + B + C) anuncios diferentes en total. Que concuerda con `r nrow(unique_listings)`, que son el número de valores de id únicos entre DB1 y DB2.
+Hay, por tanto **`r nrow(db1_not_in_2) + nrow(db2_not_in_1) + nrow(db2_in_1)`** (A + B + C) anuncios diferentes en total entre las dos bases de datos. Que concuerda con el valor `r nrow(unique_listings)`, que son el número de valores de id únicos entre DB1 y DB2.
 
-```{r, echo = FALSE, warning=FALSE}
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
 qmplot(longitude, latitude, data = db1_not_in_2, maptype = "toner-lite", color = I("red"),alpha = I(.2)) + labs(title= "data set 1 anuncios que no están en data set 2" )
-```
 
-```{r, echo = FALSE, warning=FALSE}
 qmplot(Longitude, Latitude, data = db2_not_in_1, maptype = "toner-lite", color = I("blue"),alpha = I(.2)) + labs(title= "data set 2 anuncios que no están en data set 1" )
 ```
 
-Estos son los anuncios que están en DB1 pero no en DB2:
+## Lista de anuncios que no están en las dos bases de datos
+
+### Estos son los anuncios que están en DB1 pero no en DB2:
 ```{r, echo = FALSE, warning=FALSE}
 # Load "knitr"
 library(knitr,quietly=T)
 
-# install.packages("kableExtra")
-
-# For dev version
-# install.packages("devtools")
-# devtools::install_github("haozhu233/kableExtra")
-library(kableExtra)
-
-kable(db1_not_in_2[,c(3,7)]) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
+kable(db1_not_in_2[,c(1,5,2)]) #TODO: call name of columns
 ```
 
-Estos son los anuncios que están en DB1 pero no en DB2:
+### Estos son los anuncios que están en DB1 pero no en DB2:
 ```{r, echo = FALSE, warning=FALSE}
-# Load "knitr"
-library(knitr,quietly=T)
-kable(db2_not_in_1[,c(1,8)])
+kable(db2_not_in_1[,c(3,10,7)]) #TODO: call name of columns
 ```
 
-
+### Listado de anuncios que están en DB1 y DB2:
+```{r, echo = FALSE, warning=FALSE}
+kable(db1_in_2[,c(1,5,2)]) #TODO: call name of columns
+```
 
 ## Datos
 
-InsideAIrbnb
-+ InsideAirbnb.com/euskadi
-+ Fecha scraping: 2017-03-24
-El subset de datos de Gipuzkoa se ha realizado con QGIS seleccionando los anuncios con herramienta de selección manual que estabn en el polígono de Gipuzkoa para poder incluir los que estaban ubicados en el mar.
+### InsideAirbnb
 
-API Airbnb
++ InsideAirbnb.com/euskadi
+
++ Fecha scraping: 2017-03-24
+
+El subset de datos de Donosti (https://github.com/montera34/airbnbeuskadi/blob/master/data/listings_donostia_simple.csv) se ha realizado con el script de R (https://github.com/montera34/airbnbeuskadi/blob/master/prepare-segmented-files.R) a partir de datos limpiados con openrefine para los nombres de los municipios.
+
+### API Airbnb
+
 + API
+
 + Fecha scraping: 2017-04-01
 
-
-
+El subset de datos de Donosti se ha realizado con QGIS seleccionando los anuncios con herramienta de selección manual que estabn en el polígono de Donostia para poder incluir los que estaban ubicados en el mar.
