@@ -19,8 +19,8 @@ listings_simple_1 <- read.delim("../../data/listings_donostia_simple.csv",sep = 
 listings_simple_2 <- read.delim("../../data/ng_gipuzkoa-20170401-0542_donostia.csv",sep = ",")
 ```
 
-+ DB1: Los datos de **Inside Airbnb** tienen `r nrow(listings_simple_1)` anuncios en Donostia (data/listings_donostia_simple.csv) seleccionados manualmente en QGIS para permitir seleccionar los que está ngeoposicionados en el mar y por tanto fuera del contorno de la provincia.
-+ DB2: Los datos extraídos de la **API de Airbnb** por mapa contienen `r nrow(listings_simple_2)` anuncios en Donostia.
++ DB1: Los datos de **Inside Airbnb** tienen `r nrow(listings_simple_1)` anuncios en Donostia (data/listings_donostia_simple.csv) seleccionados manualmente en QGIS para permitir seleccionar los que están geoposicionados en el mar y por tanto fuera del contorno de la provincia.
++ DB2: Los datos extraídos de la **API de mapa de Airbnb** contienen `r nrow(listings_simple_2)` anuncios en Donostia.
 
 ¿Qué anuncios tienen en común? ¿cuales no?
 
@@ -32,6 +32,7 @@ library(ggmap)
 
 qmplot(longitude, latitude, data = listings_simple_1, maptype = "toner-lite", color = I("red"),alpha = I(.2)) + labs(title= "DB1: data set 1" )
 
+# Warning: Longitude y Latitude van en mayúsculas
 qmplot(Longitude, Latitude, data = listings_simple_2, maptype = "toner-lite", color = I("blue"),alpha = I(.2)) + labs(title= "DB2: data set 2" )
 ```
 
@@ -70,7 +71,11 @@ B. La DB1 tiene **`r nrow(db1_not_in_2)`** anuncios que no están en la DB2.
 
 C. La DB2 tiene **`r nrow(db2_not_in_1)`** anuncios que no están en la DB1.
 
-Hay, por tanto **`r nrow(db1_not_in_2) + nrow(db2_not_in_1) + nrow(db2_in_1)`** (A + B + C) anuncios diferentes en total entre las dos bases de datos. Que concuerda con el valor `r nrow(unique_listings)`, que son el número de valores de id únicos entre DB1 y DB2.
+Hay, por tanto **`r nrow(db1_not_in_2) + nrow(db2_not_in_1) + nrow(db2_in_1)` anuncios ** (A + B + C) diferentes en total entre las dos bases de datos. Que concuerda con el valor `r nrow(unique_listings)`, que son el número de valores de id únicos entre DB1 y DB2.
+
+DB1 tiene **`r format(round(100*(nrow(listings_simple_1)/nrow(unique_listings)), 1))`%** de los anuncios combinados de las dos bases de datos.
+
+DB2 tiene **`r format(round(100*(nrow(listings_simple_2)/nrow(unique_listings)), 1))`% **de los anuncios combinados de las dos bases de datos.
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 qmplot(longitude, latitude, data = db1_not_in_2, maptype = "toner-lite", color = I("red"),alpha = I(.2)) + labs(title= "data set 1 anuncios que no están en data set 2" )
@@ -108,7 +113,7 @@ kable(db1_in_2[,c(1,5,2)]) #TODO: call name of columns
 
 El subset de datos de Donosti (https://github.com/montera34/airbnbeuskadi/blob/master/data/listings_donostia_simple.csv) se ha realizado con el script de R (https://github.com/montera34/airbnbeuskadi/blob/master/prepare-segmented-files.R) a partir de datos limpiados con openrefine para los nombres de los municipios.
 
-### API Airbnb
+### API de mapa de AirBnB
 
 + API
 
