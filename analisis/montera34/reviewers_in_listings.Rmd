@@ -9,14 +9,12 @@ output: html_document
 
 # introduce el path de tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
 listings_simple_1 <- read.delim("../../data/listings_donostia_merged.csv",sep = ",")
-listings_simple_2 <- read.delim("../../data/reviews_euskadi.csv",sep = ",")
+reviews <- read.delim("../../data/reviews_euskadi.csv",sep = ",")
 ```
-
-
 
 ```{r, echo = FALSE, warning=FALSE}
 
-reviews_donostia <- listings_simple_2[!(listings_simple_1$id %in% listings_simple_2$listing_id),]
+reviews_donostia <- reviews[listings_simple_1$id %in% reviews$listing_id,]
 
 reviews_donostia$reviewer_id <- as.factor(reviews_donostia$reviewer_id)
 levels(reviews_donostia$reviewer_id)
