@@ -120,3 +120,29 @@ El subset de datos de Donosti (https://github.com/montera34/airbnbeuskadi/blob/m
 + Fecha scraping: 2017-04-01
 
 El subset de datos de Donosti se ha realizado con QGIS seleccionando los anuncios con herramienta de selección manual que estabn en el polígono de Donostia para poder incluir los que estaban ubicados en el mar.
+
+```{r, echo = FALSE, warning=FALSE}
+
+# Merge datasets
+# Select columns that are common in both in the same order
+db1_in_2_simple <- db1_in_2[,c(1,38,39,49,43,42,11,13)]
+db1_not_in_2_simple <- db1_not_in_2[,c(1,38,39,49,43,42,11,13)]
+db2_not_in_1_simple <- db2_not_in_1[,c(3,5,6,8,9,10,14,15)]
+
+# change name of variables in DB2
+names(db2_not_in_1_simple)<-c("id","latitude","longitude","price","accommodates","room_type","host_id","host_name")
+
+temp <- rbind(db1_in_2_simple,db1_not_in_2_simple)
+temp$price  <- as.integer(temp$price)
+# Merge datasets
+complete_dataset <- rbind(temp,db2_not_in_1_simple)
+
+# Converts to character, uniform name of values, convert to fator again
+complete_dataset$room_type <- as.character(complete_dataset$room_type)
+complete_dataset$room_type[complete_dataset$room_type == "private_room"] <- "Private Room"
+complete_dataset$room_type[complete_dataset$room_type == "entire_home"] <- "Entire home/apt"
+complete_dataset$room_type <- as.factor(complete_dataset$room_type)
+# levels(complete_dataset$room_type)
+
+write.table(complete_dataset, "../../data/listings_donostia_merged.csv", sep=",", row.names=FALSE)
+```
