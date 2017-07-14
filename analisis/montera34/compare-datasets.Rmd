@@ -17,6 +17,7 @@ library(tidyverse)
 listings_simple_1 <- read.delim("../../data/listings_donostia_simple.csv",sep = ",")
 # listings_simple_2 <- read.delim("../../data/original/ng_gipuzkoa-20170401-0542.csv",sep = ",")
 listings_simple_2 <- read.delim("../../data/ng_gipuzkoa-20170401-0542_donostia.csv",sep = ",")
+
 ```
 
 + DB1: Los datos de **Inside Airbnb** tienen `r nrow(listings_simple_1)` anuncios en Donostia (data/listings_donostia_simple.csv) seleccionados manualmente en QGIS para permitir seleccionar los que están geoposicionados en el mar y por tanto fuera del contorno de la provincia.
@@ -132,6 +133,11 @@ db2_not_in_1_simple <- db2_not_in_1[,c(3,5,6,8,9,10,14,15)]
 # change name of variables in DB2
 names(db2_not_in_1_simple)<-c("id","latitude","longitude","price","accommodates","room_type","host_id","host_name")
 
+db1_in_2_simple$price <- as.numeric(as.character(db1_in_2_simple$price))
+db1_not_in_2_simple$price <- as.numeric(as.character(db1_not_in_2_simple$price))
+db2_not_in_1_simple$price <- as.numeric(as.character(db2_not_in_1_simple$price))
+  
+  
 temp <- rbind(db1_in_2_simple,db1_not_in_2_simple)
 temp$price  <- as.integer(temp$price)
 # Merge datasets
