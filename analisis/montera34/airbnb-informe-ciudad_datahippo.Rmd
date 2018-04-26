@@ -1,0 +1,131 @@
+---
+title: "Efecto Airbnb en Donostia (abril 2018)"
+output: html_document
+---
+
+```{r setup, include=FALSE, cache = TRUE}
+# Este documento en Rmarkdown está pensado para producir un informe a partir de datos de Airbnb de InsideAirbnb.com (http://insideairbnb.com/)
+
+# Selecciona región/lugar a analizar en las dos siguientes variables
+local_activo_name = "Donostia" #cambia 'Zarautz' por el municipio que quieras analizar
+
+# Instala y carga librerías
+
+# la primera vez necesitas instalar
+# install.packages("tidyverse")
+
+library(tidyverse)
+
+library(ggplot2) #ya incluido en tidyverse
+# library(dplyr) #ya incluido en tidyverse
+
+# carga librería para reagrupar tablas de datos y hacer "melt"
+# library("reshape2") #no sé la diferencia con "reshape"
+
+# Carga datos
+
+# introduce el path de tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
+listings_simple <- read.delim("../../data/original/180423_listings-airbnb-donostia_datahippo.csv",sep = ",")
+# Load reviews
+# reviews <- read.csv("../../data/original/reviews_euskadi.csv",sep = ",")
+
+attach(listings_simple)
+
+# Selecciona archivo listings
+local_activo = listings_simple
+
+attach(local_activo)
+```
+
+Este informe se ha generado automáticamente con R a partir del [script de Rmarkdown](https://github.com/montera34/airbnbeuskadi/tree/master/analisis/montera34/airbnb-informe-ciudad.Rmd) disponible en el [repositorio airbnbeuskadi](https://github.com/montera34/airbnbeuskadi/).
+
+## Datos
+
++ Datahippo.org/
++ Fecha scraping: 2018-04-23
+
+## Resumen
+
+En **`r local_activo_name`** hay publicados `r nrow(local_activo)` anuncios de Airbnb, que tienen capacidad para `r sum(na.omit(local_activo$capacity)) ` personas (accommodates). 
+Estos anuncios (listings, en la terminología de Airbnb) han sido publicados por `r length(levels(as.factor(local_activo$host.id)))` anfitriones. 
+
+
+## Anfitriones en Airbnb
+
+```{r, echo = FALSE, warning=FALSE}
+# To change plot order of bars, change levels in underlying factor
+reorder_size <- function(x) {
+  factor(x, levels = names(sort(table(x))))
+}
+
+ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host.id))) + coord_flip() + theme(axis.text.y = element_blank()) + labs(y = "Número de anuncios", x = "anfitrion")
+
+# Otra forma de hacer lo mismo
+nanuncios <- table(local_activo$host.id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+nanuncios <- nanuncios[order(-nanuncios)] #reordena de mayor a menor
+anfitriones_anuncios <- data.frame(nanuncios) # crea data frame
+anfitriones_anuncios$host_id <- row.names(nanuncios)
+
+# gráfico (repite el anterior, por eso está comentado)
+# ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = Freq)) + labs(x = "Número de anuncios", y = "anfitrion") + coord_flip()
+    
+# exporta datos a csv
+# write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") 
+```
+
+### Los anfitriones con más alojamientos
+
+```{r table_propietarios, echo = FALSE, warning=FALSE}
+# install package "knitr" and "rmarkdown" if not installed
+# install.packages("knitr")
+# install.packages("rmarkdown")
+
+# Load "knitr"
+library(knitr,quietly=T)
+
+propietarios <- table(local_activo$host.id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+propietarios <- propietarios[order(-propietarios)] #reordena de mayor a menor
+propietarios_nalojamientos <- data.frame(propietarios) # crea data frame
+
+kable(as.data.frame(propietarios_nalojamientos[1:20,]),caption = "Los 20 anfitriones con más alojamientos (id)",col.names = c("host_id","alojamientos"))
+
+# nalojamientos <- donostia %>%
+#   group_by(host_id) %>%
+#   summarize(sum.alojamientos=count(requires_license)) %>%
+# arrange(desc(sum.alojamientos))
+# kable(nalojamientos[1:20,],caption = "Los 20 anfitriones con más alojamientos (id)")
+```
+
+### Los anfitriones con más plazas
+
+```{r table_anfitriones_2, echo = FALSE, warning=FALSE}
+library(dplyr)
+# 1: filter to keep three states.  
+# basic_summ = filter(mprices, state %in% c("California", "New York", "Illinois"))
+ 
+# 2: set up data frame for by-group processing.  
+naccommodates = group_by(local_activo, host.id)
+ 
+# 3: calculate the three summary metrics
+naccommodates = summarise( naccommodates, accommodates_sum = sum(capacity) )
+naccommodates <- naccommodates[with(naccommodates, order(-accommodates_sum)), ]
+  
+ggplot(naccommodates) +
+  geom_bar(stat='identity', aes(x = reorder(host.id,accommodates_sum), y = accommodates_sum)) + coord_flip() + theme(axis.text.y = element_blank()) + 
+  labs(x = "anfitriones", y = "nº anuncios", title= "número de plazas por anfitrión" ) 
+# + scale_y_continuous(breaks=seq(0,300,10))
+```
+
+
+Los 10 primeros anfitriones (`r format(round(100*10/length(levels(as.factor(local_activo$host.id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:10,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:10,2])/sum(local_activo$capacity), 1), nsmall = 1)`% del total de plazas).
+
+Los 20 primeros anfitriones (`r format(round(100*20/length(levels(as.factor(local_activo$host.id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:20,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,2])/sum(local_activo$capacity), 1), nsmall = 1)`% del total de plazas).
+
+Los 50 primeros anfitriones (`r format(round(100*50/length(levels(as.factor(local_activo$host.id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:50,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,2])/sum(local_activo$capacity), 1), nsmall = 1)`% del total de plazas).
+
+Los 100 primeros anfitriones (`r format(round(100*100/length(levels(as.factor(local_activo$host.id))), 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:100,2])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,2])/sum(local_activo$capacity), 1), nsmall = 1)`% del total de plazas).
+
+```{r table_anfitriones_3, echo = FALSE}
+kable(naccommodates[1:30,],caption = "Los 30 anfitriones (host_id) con más alojamientos tienen n plazas (accomodates)",col.names = c("host_id","plazas"))
+```
+
