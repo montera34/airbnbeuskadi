@@ -26,7 +26,7 @@ vut$lonr <- jitter(vut$longitude, factor=1, amount = 0.001)
 
 # ------------tablas por barrios-------
 vut2 <- vut %>% 
-  group_by(barrio,tipo,estadox) %>% 
+  group_by(barrio,umenores,tipo,estadox) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
   arrange(-count)
@@ -51,6 +51,19 @@ ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = barrio, y = count
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) +
   labs(title = "Viviendasde uso turístico según estado de tramitación por barrio",
+       subtitle = "",
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+
+ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = umenores, y = count,fill=estadox)) +
+  geom_bar(stat="identity")+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Viviendasde uso turístico según estado de tramitación por unidad menor",
        subtitle = "",
        x = NULL,
        y = NULL,
