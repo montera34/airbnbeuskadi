@@ -1,4 +1,6 @@
 # VUT oficiales Donostia
+# Este archivo genera mapas basados en los datos oficiales de viviendas y habitaciones turísticas
+# según la web del Ayuntamiento de Donostia (descargado en data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_WGS84.csv).
 
 # Load libraries
 library(tidyverse)
@@ -12,7 +14,7 @@ barrios <- readOGR("data/barrios-donostia.geojson")
 menores <- readOGR("data/original/shapes/unidades-menores-donostia.geojson")
 
 # Load VUT
-vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_WGS84.csv",sep = ",")
+vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",")
 
 # create taxonomy for estado
 levels(vut$estado)
@@ -22,7 +24,40 @@ vut$estadox <- strapplyc( as.character(vut$estado), ".*_(.*)", simplify = TRUE)
 vut$latr <- jitter(vut$latitude, factor=1, amount = 0.001)
 vut$lonr <- jitter(vut$longitude, factor=1, amount = 0.001)
 
-# Mapa
+# ------------tablas por barrios-------
+vut2 <- vut %>% 
+  group_by(barrio,tipo,estadox) %>% 
+  summarise(count=n()) %>% 
+  mutate(suma=sum(count)) %>%
+  arrange(-count)
+
+ggplot(vut2,aes(x = barrio, y = count,fill=estadox)) +
+  geom_bar(stat="identity")+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Habitaciones y viviendas de uso turístico según estado de tramitación por barrio",
+       subtitle = "",
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+
+ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = barrio, y = count,fill=estadox)) +
+  geom_bar(stat="identity")+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Viviendasde uso turístico según estado de tramitación por barrio",
+       subtitle = "",
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+           
+# --------------- Mapas --------------------
 ggplot() + 
   scale_fill_manual(values=cbPalette) +
   geom_point(data=vut,aes(x=lonr, y=latr,colour=estadox,shape=tipo),
@@ -107,4 +142,3 @@ ggplot() +
        x = NULL,
        y = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb")
-})
