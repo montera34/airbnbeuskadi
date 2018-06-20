@@ -28,17 +28,17 @@ vut$latr <- jitter(vut$latitude, factor=1, amount = 0.001)
 vut$lonr <- jitter(vut$longitude, factor=1, amount = 0.001)
 
 # ----- barras por barrios-------
-vut2 <- vut %>% 
+vut2 <- vut %>%
   group_by(barrio,estadox) %>% 
   # group_by(barrio,umenores,tipo,estadox) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
   arrange(-count)
 
-png(filename="images/vut-estado-tramitacion-barrio-2018.png",width = 900,height = 600)
+png(filename="images/vut-barras-estado-tramitacion-barrio-2018.png",width = 900,height = 600)
 ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=estadox)) +
   geom_bar(stat="identity")+
-  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
     legend.position="top"
@@ -57,10 +57,10 @@ vut2 <- vut %>%
   mutate(suma=sum(count)) %>%
   arrange(-count)
 
-png(filename="images/hab-viv-barrio-vut-2018.png",width = 900,height = 600)
+png(filename="images/hab-viv-barras-barrio-vut-2018.png",width = 900,height = 600)
 ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=tipo)) +
   geom_bar(stat="identity")+
-  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
     legend.position="top"
@@ -81,10 +81,10 @@ vut2 <- vut %>%
   mutate(suma=sum(count)) %>%
   arrange(-count)
 
-png(filename="images/viviendas-umenor-vut-2018.png",width = 900,height = 1800)
+png(filename="images/viviendas-umenor-barras-vut-2018.png",width = 900,height = 1800)
 ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = reorder(umenores,suma), y = count,fill=estadox)) +
   geom_bar(stat="identity")+
-  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
     legend.position="top"
@@ -96,6 +96,27 @@ ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = reorder(umenores,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
 dev.off()  
+
+# ------------tablas por tipos de habitación-------
+vut3 <- vut %>% 
+  group_by(tipo,estadox) %>% 
+  summarise(count=n()) %>%
+  mutate(suma=sum(count))
+
+png(filename="images/hab-viv-barras-vut-donostia-2018.png",width = 900,height = 600)
+ggplot(vut3 ,aes(x = tipo, y = count,fill=estadox)) +
+  geom_bar(stat="identity")+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Habitaciones y viviendas (VUT) en Donostia.Estado tramitación",
+       subtitle = "Marzo 2017",
+       y = "número de viviendas",
+       x = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+dev.off()
 
 # --------------- Mapas --------------------
 ggplot() + 
