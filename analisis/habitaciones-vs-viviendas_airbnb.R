@@ -59,7 +59,7 @@ png(filename="images/hab-viv-barras-airbnb-donostia-2017-2018.png",width = 600,h
   ggplot(m,aes(x = tipo_habitacion, y = Value)) +
     geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
     coord_flip() +
-    theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
+    theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
     theme(
       panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
     ) +
@@ -98,6 +98,7 @@ airbnb1 <- airbnb %>%
   group_by(room_type) %>% 
   summarise(count=n())
 
+png(filename="images/hab-viv-barras-airbnb-donostia-2018.png",width = 600,height = 400)
 ggplot(airbnb1,aes(x = room_type, y = count)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
@@ -110,6 +111,7 @@ ggplot(airbnb1,aes(x = room_type, y = count)) +
        y = NULL,
        caption = "Datos: datahippo.org. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
+dev.off()
 
 # ------------tablas por barrios-------
 airbnb2 <- airbnb %>% 
