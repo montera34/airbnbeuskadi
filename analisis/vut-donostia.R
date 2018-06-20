@@ -14,62 +14,89 @@ barrios <- readOGR("data/barrios-donostia.geojson")
 menores <- readOGR("data/original/shapes/unidades-menores-donostia.geojson")
 
 # Load VUT
-vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",")
+vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",", encoding = "utf-8")
+
+# Corrige nombre de unidad menor
+levels(vut$umenores)[levels(vut$umenores)=="Sag�es"] <- "Sagües"
 
 # create taxonomy for estado
 levels(vut$estado)
 vut$estadox <- strapplyc( as.character(vut$estado), ".*_(.*)", simplify = TRUE)
 
-# randomice lotation of points
+# add noise to location of points
 vut$latr <- jitter(vut$latitude, factor=1, amount = 0.001)
 vut$lonr <- jitter(vut$longitude, factor=1, amount = 0.001)
 
-# ------------tablas por barrios-------
+# ----- barras por barrios-------
 vut2 <- vut %>% 
-  group_by(barrio,umenores,tipo,estadox) %>% 
+  group_by(barrio,estadox) %>% 
+  # group_by(barrio,umenores,tipo,estadox) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
   arrange(-count)
 
-ggplot(vut2,aes(x = barrio, y = count,fill=estadox)) +
+png(filename="images/vut-estado-tramitacion-barrio-2018.png",width = 900,height = 600)
+ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=estadox)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
   theme(
-    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position="top"
   ) +
-  labs(title = "Habitaciones y viviendas de uso turístico según estado de tramitación por barrio",
-       subtitle = "",
+  labs(title = "Viviendas de uso turístico según estado de tramitación por barrio",
+       subtitle = "Donostia. Marzo 2018.",
        x = NULL,
        y = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
+dev.off()
 
-ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = barrio, y = count,fill=estadox)) +
-  geom_bar(stat="identity")+
-  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
-  theme(
-    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
-  ) +
-  labs(title = "Viviendasde uso turístico según estado de tramitación por barrio",
-       subtitle = "",
-       x = NULL,
-       y = NULL,
-       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
-  coord_flip()
+vut2 <- vut %>% 
+  group_by(barrio,tipo) %>%
+  summarise(count=n()) %>% 
+  mutate(suma=sum(count)) %>%
+  arrange(-count)
 
-ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = umenores, y = count,fill=estadox)) +
+png(filename="images/hab-viv-barrio-vut-2018.png",width = 900,height = 600)
+ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=tipo)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
   theme(
-    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position="top"
   ) +
-  labs(title = "Viviendasde uso turístico según estado de tramitación por unidad menor",
-       subtitle = "",
+  labs(title = "Viviendas de uso turístico según habitación/apartamento por barrio",
+       subtitle = "Donostia. Marzo 2018.",
        x = NULL,
        y = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
-           
+dev.off()
+
+# ----- barras por unidad menor-------
+
+vut2 <- vut %>% 
+  group_by(umenores,tipo,estadox) %>%
+  summarise(count=n()) %>% 
+  mutate(suma=sum(count)) %>%
+  arrange(-count)
+
+png(filename="images/viviendas-umenor-vut-2018.png",width = 900,height = 1800)
+ggplot(vut2[vut2$tipo=="Viviendas de uso turístico",],aes(x = reorder(umenores,suma), y = count,fill=estadox)) +
+  geom_bar(stat="identity")+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position="top"
+  ) +
+  labs(title = "Viviendas de uso turístico según estado de tramitación por unidad menor",
+       subtitle = "Donostia. Marzo 2018.",
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+dev.off()  
+
 # --------------- Mapas --------------------
 ggplot() + 
   scale_fill_manual(values=cbPalette) +
