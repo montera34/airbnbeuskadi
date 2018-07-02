@@ -1,5 +1,6 @@
 # Habitaciones vs Viviendas completas en Airbnb Donostia
 
+
 # ---- Load libraries -----
 library(tidyverse)
 # read shapes
@@ -21,30 +22,31 @@ airbnb2017 <- read.delim("data/listings_donostia_simple.csv",sep = ",")
 levels(airbnb2017$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
 # Airbnb listings 2017 merged
-airbnbmerged <- read.delim("data/output/170400_listings-airbnb-donostia_insideairbnb-datahippo_barrio-umenor.csv",sep = ",")
+airbnb2017merged <- read.delim("data/output/170400_listings-airbnb-donostia_insideairbnb-datahippo_barrio-umenor.csv",sep = ",")
 # Translate room type
-levels(airbnbmerged$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
+levels(airbnb2017merged$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
 # Airbnb listings 2018
 load("data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.Rda")
+airbnb2018 <- airbnb
 # Translate room type
-levels(airbnb$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
+levels(airbnb2018$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
 # ----- Prepares data -------
 
 # Fixes barrios and unidades menores
-airbnb <- transform(airbnb,barrio=unlist(barrio))
-airbnb <- transform(airbnb,umenores=unlist(umenores))
+airbnb2018 <- transform(airbnb2018,barrio=unlist(barrio))
+airbnb2018 <- transform(airbnb2018,umenores=unlist(umenores))
 
 table(airbnb2017$room_type)
-table(airbnbmerged$room_type)
-table(airbnb$room_type)
+table(airbnb2017merged$room_type)
+table(airbnb2018$room_type)
 
 # ----- Comparative room types -----------
 # Compare two data sets by number of room types
-# compare_room <- merge(data.frame(table(airbnb$room_type)),data.frame(table(airbnbmerged$room_type)),by="Var1")
+# compare_room <- merge(data.frame(table(airbnb2018$room_type)),data.frame(table(airbnb2017merged$room_type)),by="Var1")
 # compare_room <- merge(compare_room,data.frame(table(airbnb2017$room_type)),by="Var1")
-compare_room <- merge(data.frame(table(airbnbmerged$room_type)),data.frame(table(airbnb$room_type)),by="Var1")
+compare_room <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb2018$room_type)),by="Var1")
 colnames(compare_room) <- c("tipo_habitacion","2017","2018")
 
 # reshape data to long format to prepare to plot bar chart year comparison
@@ -93,7 +95,7 @@ ggplot(airbnb1_2017,aes(x = room_type, y = count)) +
   coord_flip()
 dev.off()
 
-airbnb1 <- airbnb %>% 
+airbnb1 <- airbnb2018 %>% 
   group_by(room_type) %>% 
   summarise(count=n())
 
@@ -113,7 +115,7 @@ ggplot(airbnb1,aes(x = room_type, y = count)) +
 dev.off()
 
 # ------------barras por barrios-------
-airbnb3 <- airbnbmerged  %>% 
+airbnb3 <- airbnb2017merged  %>% 
   group_by(barrio,room_type) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
@@ -136,7 +138,7 @@ ggplot(airbnb3,aes(x = reorder(barrio,suma), y = count,fill=room_type)) +
   coord_flip()
 dev.off()
 
-airbnb2 <- airbnb %>% 
+airbnb2 <- airbnb2018 %>% 
   group_by(barrio,room_type) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
@@ -160,7 +162,7 @@ ggplot(airbnb2,aes(x = reorder(barrio,suma), y = count,fill=room_type)) +
 dev.off()
 
 # ------------barras por unidades menores-------
-airbnb3 <- airbnbmerged  %>% 
+airbnb3 <- airbnb2017merged  %>% 
   group_by(umenores,room_type) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
@@ -183,7 +185,7 @@ ggplot(airbnb3,aes(x = reorder(umenores,suma), y = count,fill=room_type)) +
   coord_flip()
 dev.off()
 
-airbnb2 <- airbnb %>% 
+airbnb2 <- airbnb2018 %>% 
   group_by(umenores,room_type) %>% 
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
@@ -206,11 +208,24 @@ ggplot(airbnb2,aes(x = reorder(umenores,suma), y = count,fill=room_type)) +
   coord_flip()
 dev.off()
 
+airbnb2$percent <-round(100* airbnb2$count / airbnb2$suma,digits = 1)
+
+airbnb2 <- airbnb2018 %>% 
+  group_by(umenores,room_type) %>% 
+  summarise(count=n()) %>% 
+  mutate(suma=sum(count)) %>%
+  arrange(-count)
+
+table() %>%
+  arrange(desc(habitantes)) %>%
+  knitr::kable("html") %>%
+  kable_styling("striped", full_width = F, font_size = 10)
+
 # -----------Mapa---------------
 png(filename="images/hab-viv-mapa-airbnb-menores-donostia-2018.png",width = 800,height = 600)
 ggplot() + 
   scale_fill_manual(values=cbPalette) +
-  geom_point(data=airbnb,aes(x=longitude, y=latitude,colour=room_type),
+  geom_point(data=airbnb2018,aes(x=longitude, y=latitude,colour=room_type),
              alpha=0.5,size = 1.5)+
   geom_path(data=menores,aes(x=long, y=lat,group=group), colour="black",size = 0.1)+
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
