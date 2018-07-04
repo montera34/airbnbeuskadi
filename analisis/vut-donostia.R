@@ -9,11 +9,12 @@ library(rgdal)
 library(ggmap) #for theme nothing
 library(gsubfn) #for selecting estado
 
-# ------ Load shapes ------
+# ------ Load data and shapes ------
 barrios <- readOGR("data/barrios-donostia.geojson")
 menores <- readOGR("data/original/shapes/unidades-menores-donostia.geojson")
 mar <- readOGR("data/original/shapes/mar-donostia.geojson")
 rio <- readOGR("data/original/shapes/rio-donostia.geojson")
+edificios <- readOGR("data/original/shapes/edificios-donostia.geojson")
 
 # Load VUT
 vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",", encoding = "utf-8")
@@ -23,6 +24,10 @@ zona_saturada <- readOGR("data/original/vut-donostia/VUT_saturada-donostia-WGS84
 zona_b <- readOGR("data/original/vut-donostia/VUT_zonaB-donostia-WGS84.geojson")
 zona_c <- readOGR("data/original/vut-donostia/VUT_zonaC-donostia-WGS84.geojson")
 
+# Load data
+viv_barrio <- read.csv("data/output/barrios_donostia_con_viviendas-y-airbnb.csv",sep=",")
+# elimina las columnas no necesarias
+viv_barrio <- viv_barrio[,-c(1:6,8:11,13)]
 # Corrige nombre de unidad menor
 levels(vut$umenores)[levels(vut$umenores)=="Sag�es"] <- "Sagües"
 
@@ -39,7 +44,7 @@ table(vut$estadox)
 table(vut$tipo)
 
 # ----- barras por barrios-------
-vut2 <- vut %>%
+vut1 <- vut %>%
   group_by(barrio,estadox) %>% 
   # group_by(barrio,umenores,tipo,estadox) %>% 
   summarise(count=n()) %>% 
@@ -47,7 +52,7 @@ vut2 <- vut %>%
   arrange(-count)
 
 png(filename="images/vut-barras-estado-tramitacion-barrio-2018.png",width = 900,height = 600)
-ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=estadox)) +
+ggplot(vut1,aes(x = reorder(barrio, suma), y = count, fill=estadox)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
   theme(
@@ -61,6 +66,9 @@ ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=estadox)) +
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
 dev.off()
+
+vut1$percent <- round( vut1$count / 1242 * 100, digits=1 )
+
 
 vut2 <- vut %>% 
   group_by(barrio,tipo) %>%
@@ -129,29 +137,60 @@ ggplot(vut3 ,aes(x = tipo, y = count,fill=estadox)) +
   coord_flip()
 dev.off()
 
+# --------cálculo de ratio VUT por nº viviendas-------
+barrios_vut <- vut %>%
+  group_by(barrio) %>% 
+  # group_by(barrio,umenores,tipo,estadox) %>% 
+  summarise(vut=n()) %>% 
+  # mutate(suma=sum(count)) %>%
+  arrange(-vut)
+
+barrios_vut <- merge(barrios_vut,viv_barrio,by.x="barrio",by.y="bar_ds_o")
+barrios_vut$ratio_vut <- round(barrios_vut$vut / barrios_vut$right_total_viviendas_familiares *100,digits=2)
+barrios_vut$ratio_airbnb <- round(barrios_vut$count_vals / barrios_vut$right_total_viviendas_familiares *100,digits=2)
+
+png(filename="images/ratio-vut-barras-donostia-barrio-2018.png",width = 900,height = 600)
+ggplot(barrios_vut,aes(x = reorder(barrio, ratio_vut), y = ratio_vut)) +
+  geom_bar(stat="identity")+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position="top"
+  ) +
+  labs(title = "Ratio de viviendas de uso turístico (VUT) por cada 100 viviendas familiares por barrio",
+       subtitle = "Donostia. Marzo 2018.",
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+dev.off()
+
 # --------------- Mapas --------------------
 
-cbPalette <- c("11d262","f9c21a")
+cbPalette <- c("#017c0a","#f4830f")
 
+png(filename="images/map-vut-tramitacion-donostia-abril2018.png",width = 1200,height = 900)
 ggplot() + 
   # mar y río
-  geom_polygon(data=mar,aes(x=long, y=lat,group=group),fill="#aaaaff",alpha=0.5) +
-  geom_polygon(data=rio,aes(x=long, y=lat,group=group),fill="#aaaaff",alpha=0.5) +
+  geom_polygon(data=mar,aes(x=long, y=lat,group=group),fill="#f0f5fc",alpha=0.5) +
+  geom_polygon(data=rio,aes(x=long, y=lat,group=group),fill="#f0f5fc",alpha=0.5) +
   # zonas de VUT
-  # geom_path(data=zona_saturada,aes(x=long, y=lat,group=group),colour="#000000",size=1,linetype=1) +
-  # geom_path(data=zona_b,aes(x=long, y=lat,group=group),colour="#000000",size=1,linetype=2) +
-  # geom_path(data=zona_c,aes(x=long, y=lat,group=group),colour="#000000",size=1,linetype=3) +
-  geom_polygon(data=zona_saturada,aes(x=long, y=lat,group=group),fill="#bbbbbb",size=1,linetype=1) +
-  geom_polygon(data=zona_b,aes(x=long, y=lat,group=group),fill="#dddddd",size=1,linetype=2) +
-  geom_polygon(data=zona_c,aes(x=long, y=lat,group=group),fill="#efefef",size=1,linetype=3) +
+  geom_polygon(data=zona_saturada,aes(x=long, y=lat,group=group),fill="#2b8cbe") +
+  geom_polygon(data=zona_b,aes(x=long, y=lat,group=group),fill="#a6bddb") +
+  geom_polygon(data=zona_c,aes(x=long, y=lat,group=group),fill="#eeeeee") +
+  # edificios
+  # geom_polygon(data=edificios,aes(x=long, y=lat,group=group),fill="#bbbbbb") +
   # Puntos VUT
-  scale_fill_manual(values=cbPalette) +
+  scale_colour_manual(values=cbPalette) +
   geom_point(data=vut,aes(x=lonr, y=latr,colour=estadox,shape=tipo),
              alpha=0.9,size = 2)+
-  geom_path(data=menores,aes(x=long, y=lat,group=group), colour="black",size = 0.1)+
+  # barrios o unidades menores
+  geom_path(data=barrios,aes(x=long, y=lat,group=group), colour="black",size = 0.1)+
+  geom_path(data=barrios[barrios@data$BAR_DS_O == "Centro" | barrios@data$BAR_DS_O == "Gros" | barrios@data$BAR_DS_O == "Antiguo",],
+            aes(x=long, y=lat,group=group),
+            colour="black",size = 0.7)+
+  # Theme options: 
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
-  # theme_nothing(legend = TRUE) +
-  # theme_bw() +
   theme(
     panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank(),
@@ -164,7 +203,7 @@ ggplot() +
      x = NULL,
      y = NULL,
      caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb")
-
+dev.off()
 
 
 ggplot() + 
