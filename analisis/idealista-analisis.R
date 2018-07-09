@@ -6,6 +6,22 @@ library(rgdal)
 library(ggmap) #for theme nothing
 library(reshape2)
 library(scales)
+library(formattable) #para tablas enriquecidas
+
+# ------------ to export format table ------------
+library("htmltools")
+library("webshot")
+export_formattable <- function(f, file, width = "100%", height = NULL, 
+                               background = "white", delay = 0.2)
+{
+  w <- as.htmlwidget(f, width = width, height = height)
+  path <- html_print(w, background = background, viewer = NULL)
+  url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
+  webshot(url,
+          file = file,
+          selector = ".formattable_widget",
+          delay = delay)
+}
 
 # ------ Load data ------
 
@@ -112,6 +128,15 @@ idealista_barrio_medio_m2_matrix$dif13_17 <- idealista_barrio_medio_m2_matrix[,7
 idealista_barrio_medio_m2_matrix$evol13_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3])/idealista_barrio_medio_m2_matrix[,3],digits = 1)
 # Porcentaje de cambio 2016-2017
 idealista_barrio_medio_m2_matrix$evol16_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,6])/idealista_barrio_medio_m2_matrix[,6],digits = 1)
+as.data.frame.matrix(idealista_barrio_medio_m2_matrix)
+
+ft <- formattable( idealista_barrio_medio_m2_matrix[,-c(2,8:10)],
+             list( area(col = 1:6) ~ color_tile("transparent", "#2b8cbe")))
+export_formattable(ft,"images/idealista/tablas-idealista-precios-m2-barrios-donostia-2013-17.png")
+
+ft <- formattable( idealista_barrio_medio_m2_matrix[,-c(2:7)],
+             list( area(col = 1:4) ~ color_tile("transparent", "#2b8cbe")))
+export_formattable(ft,"images/idealista/tablas-idealista-evolucion-precios-m2-barrios-donostia-2013-17.png")
 
 # Diferencia
 idealista_menor_medio_m2_matrix$dif13_17 <- idealista_menor_medio_m2_matrix[,7] - idealista_menor_medio_m2_matrix[,3]
@@ -170,7 +195,7 @@ ggplot() +
     axis.text = element_blank(),
     legend.position="top"
   ) +
-  labs(title = "Evolución precio mensual por m² por barrio en Donostia. 2013-2017",
+  labs(title = "Evolución precio mensual medio por m² por barrio en Donostia. 2013-2017",
        subtitle = "Ofertas debajo de 3.000€ de 1 a 4 habitaciones.",
        x = NULL,
        y = NULL,
@@ -207,8 +232,8 @@ ggplot() +
     axis.text = element_blank(),
     legend.position="top"
   ) +
-  labs(title = "Evolución precio m2 por unidad menor en Donostia",
-       subtitle = "2013-2017.",
+  labs(title = "Evolución precio mensual medio por m² por unidad menor en Donostia. 2013-2017",
+       subtitle = "Ofertas debajo de 3.000€ de 1 a 4 habitaciones.",
        x = NULL,
        y = NULL,
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") +
@@ -220,15 +245,17 @@ dev.off()
 
 # ----- Mapas precio ----
 # renames variable to be able to use it
+names(menor_m2)[names(menor_m2) == '2016'] <- 'x2016'
 names(menor_m2)[names(menor_m2) == '2017'] <- 'x2017'
 
+# Mapa precio por m2 en unidad menor
 png(filename="images/idealista/mapa-idealista-precio-m2-menores-donostia-2017.png",width = 900,height = 600)
 ggplot() +
   geom_polygon(data = menor_m2, 
                aes(x = long, y = lat, group = group,fill = x2017), #TODO: no funciona
                colour="white",  
                size = 0.2) +
-  scale_fill_distiller(name="Precios €/m2 mes", palette = "Blues",
+  scale_fill_distiller(name="Precios €/m² mes", palette = "Blues",
                        breaks = pretty_breaks(n = 4),direction = 1)+ #,
   scale_colour_gradient() +
   # coord_map() +
@@ -243,8 +270,8 @@ ggplot() +
     axis.text = element_blank(),
     legend.position="top"
   ) +
-  labs(title = "Precio m2 por unidad menor en Donostia",
-       subtitle = "2017.",
+  labs(title = "Precio mensual medio por m² por unidad menor en Donostia. 2017",
+        subtitle = "Ofertas debajo de 3.000€ de 1 a 4 habitaciones.",
        x = NULL,
        y = NULL,
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") 
