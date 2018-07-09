@@ -8,7 +8,8 @@ library(reshape2)
 library(scales)
 library(formattable) #para tablas enriquecidas
 
-# ------------ to export format table ------------
+------------ to export format table ------------
+# via https://github.com/renkun-ken/formattable/issues/26
 library("htmltools")
 library("webshot")
 export_formattable <- function(f, file, width = "100%", height = NULL, 
@@ -249,14 +250,14 @@ names(menor_m2)[names(menor_m2) == '2016'] <- 'x2016'
 names(menor_m2)[names(menor_m2) == '2017'] <- 'x2017'
 
 # Mapa precio por m2 en unidad menor
-png(filename="images/idealista/mapa-idealista-precio-m2-menores-donostia-2017.png",width = 900,height = 600)
+png(filename="images/idealista/mapa-idealista-precio-m2-menores-donostia-2016.png",width = 900,height = 600)
 ggplot() +
   geom_polygon(data = menor_m2, 
-               aes(x = long, y = lat, group = group,fill = x2017), #TODO: no funciona
+               aes(x = long, y = lat, group = group,fill = x2016), #TODO: no funciona
                colour="white",  
                size = 0.2) +
   scale_fill_distiller(name="Precios €/m² mes", palette = "Blues",
-                       breaks = pretty_breaks(n = 4),direction = 1)+ #,
+                       breaks = pretty_breaks(n = 4),direction = 1,limits = c(0, 25))+ #,
   scale_colour_gradient() +
   # coord_map() +
   coord_quickmap(xlim=c(-2.08, -1.92), ylim=c(43.2775,43.335))  +
@@ -270,7 +271,7 @@ ggplot() +
     axis.text = element_blank(),
     legend.position="top"
   ) +
-  labs(title = "Precio mensual medio por m² por unidad menor en Donostia. 2017",
+  labs(title = "Precio mensual medio por m² por unidad menor en Donostia. 2016",
         subtitle = "Ofertas debajo de 3.000€ de 1 a 4 habitaciones.",
        x = NULL,
        y = NULL,
