@@ -33,7 +33,7 @@ barrios.names.location[barrios.names.location$BAR_DS_O=="Egia",]$lat <- 43.31799
 # ----------- Prepare data -------------
 
 # Create matrix
-idealista_barrio_matrix <-dcast(idealista_barrio_mediano,barriocal ~ yearf)
+# idealista_barrio_matrix <-dcast(idealista_barrio_mediano,barriocal ~ yearf)
 
 # ---- Análisis gráficos de línea evolución 2012-2017 por barrio------ 
 
@@ -109,16 +109,16 @@ idealista_menor_medio_m2_matrix <-dcast(idealista_menor_medio_m2,menores ~ yearf
 # Diferencia
 idealista_barrio_medio_m2_matrix$dif13_17 <- idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3]
 # Porcentaje de cambio 2013-2017
-idealista_barrio_medio_m2_matrix$evol13_17 <- round((idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3])/idealista_barrio_medio_m2_matrix[,3],digits = 2)
+idealista_barrio_medio_m2_matrix$evol13_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3])/idealista_barrio_medio_m2_matrix[,3],digits = 1)
 # Porcentaje de cambio 2016-2017
-idealista_barrio_medio_m2_matrix$evol16_17 <- round((idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,6])/idealista_barrio_medio_m2_matrix[,6],digits = 2)
+idealista_barrio_medio_m2_matrix$evol16_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,6])/idealista_barrio_medio_m2_matrix[,6],digits = 1)
 
 # Diferencia
 idealista_menor_medio_m2_matrix$dif13_17 <- idealista_menor_medio_m2_matrix[,7] - idealista_menor_medio_m2_matrix[,3]
 # Porcentaje de cambio 2013-2017
-idealista_menor_medio_m2_matrix$evol13_17 <- round((idealista_menor_medio_m2_matrix[,7] - idealista_menor_medio_m2_matrix[,3])/idealista_menor_medio_m2_matrix[,3],digits = 2)
+idealista_menor_medio_m2_matrix$evol13_17 <- round(100*(idealista_menor_medio_m2_matrix[,7] - idealista_menor_medio_m2_matrix[,3])/idealista_menor_medio_m2_matrix[,3],digits = 1)
 # Porcentaje de cambio 2016-2017
-idealista_menor_medio_m2_matrix$evol16_17 <- round((idealista_menor_medio_m2_matrix[,7] - idealista_menor_medio_m2_matrix[,6])/idealista_menor_medio_m2_matrix[,6],digits = 2)
+idealista_menor_medio_m2_matrix$evol16_17 <- round(100*(idealista_menor_medio_m2_matrix[,7] - idealista_menor_medio_m2_matrix[,6])/idealista_menor_medio_m2_matrix[,6],digits = 1)
 
 # ----- Prepara mapas ------
 
@@ -155,13 +155,13 @@ ggplot() +
                aes(x = long, y = lat, group = group, fill = evol13_17), 
                colour="white",  
                size = 0.5) +
-  scale_fill_distiller(name="Evolución precios", palette = "RdBu",
-                       breaks = pretty_breaks(n = 4),limits = c(-0.45, 0.45))+ #direction = 1, 
+  scale_fill_distiller(name="Evolución precios (%)", palette = "RdBu",
+                       breaks = pretty_breaks(n = 4),limits = c(-44, 44))+ #direction = 1, 
   scale_colour_gradient() +
   # coord_map() +
   coord_quickmap(xlim=c(-2.08, -1.92), ylim=c(43.2775,43.335))  +
   theme_nothing(legend = TRUE) +
-  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 13) +
   theme(
     panel.grid.minor.y = element_blank(),
     panel.grid.major.y = element_blank(),
@@ -170,16 +170,16 @@ ggplot() +
     axis.text = element_blank(),
     legend.position="top"
   ) +
-  labs(title = "Evolución precio m2 por barrio en Donostia",
-       subtitle = "2013-2017.",
+  labs(title = "Evolución precio mensual por m² por barrio en Donostia. 2013-2017",
+       subtitle = "Ofertas debajo de 3.000€ de 1 a 4 habitaciones.",
        x = NULL,
        y = NULL,
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") +
   geom_text(data=barrios.names.location, 
             aes(long.x, lat.x,
-                label = paste(evol13_17)),
+                label = paste(BAR_DS_O,paste(evol13_17,"%",sep=""),sep = "\n")),
             # color = porcentajeviv), #substring(BAR_DS_O,1,2)," ",
-            size=4, fontface="bold",color = "black")
+            size=3,color = "black") #fontface="bold"
 dev.off()
 
 # evolución precio metro cuadrado por unidad menor
@@ -192,8 +192,8 @@ ggplot() +
                aes(x = long, y = lat, group = group,fill = evol13_17),
                colour="white",  
                size = 0.2) +
-  scale_fill_distiller(name="Evolución precios", palette = "RdBu",
-                       breaks = pretty_breaks(n = 4),limits = c(-1.52, 1.52))+ #direction = 1,
+  scale_fill_distiller(name="Evolución precios (%)", palette = "RdBu",
+                       breaks = pretty_breaks(n = 4),limits = c(-121, 121))+ #direction = 1,
   scale_colour_gradient() +
   # coord_map() +
   coord_quickmap(xlim=c(-2.08, -1.92), ylim=c(43.2775,43.335))  +
@@ -214,11 +214,12 @@ ggplot() +
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") +
   geom_text(data=menores.names.location, 
             aes(long.x, lat.x,
-                label = paste(evol13_17,sep = "\n")),
-            size=3,color = "black")
+                label = paste(evol13_17,sep="")),
+            size=2.5,color = "black")
 dev.off()
 
 # ----- Mapas precio ----
+# renames variable to be able to use it
 names(menor_m2)[names(menor_m2) == '2017'] <- 'x2017'
 
 png(filename="images/idealista/mapa-idealista-precio-m2-menores-donostia-2017.png",width = 900,height = 600)
@@ -247,8 +248,8 @@ ggplot() +
        x = NULL,
        y = NULL,
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") 
-  geom_text(data=menores.names.location, 
-            aes(long.x, lat.x,
-                label = paste(evol13_17,sep = "\n")),
-            size=3,color = "black")
+  # geom_text(data=menores.names.location, 
+  #           aes(long.x, lat.x,
+  #               label = paste(evol13_17,sep = "\n")),
+  #           size=3,color = "black")
 dev.off()
