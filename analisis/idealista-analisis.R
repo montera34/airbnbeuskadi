@@ -11,7 +11,6 @@ library(scales)
 
 # Load shapes
 barrios <- readOGR("data/barrios-donostia_simplificado.geojson")
-# barrios <- readOGR("../donostiaviz/data/shapes/barrios-donostia_simplify.json")
 menores <- readOGR("data/output/limites/unidades-menores-donostia_cleaned-merged.geojson")
 mar <- readOGR("data/original/shapes/mar-donostia.geojson")
 rio <- readOGR("data/original/shapes/rio-donostia.geojson")
@@ -25,8 +24,8 @@ idealista_barrio_medio_m2 <- read.delim("data/output/idealista/donostia/idealist
 idealista_menor_medio_m2 <- read.delim("data/output/idealista/donostia/idealista-unidad-menor-precio-medio-metro-cuadrado-2012-2016.csv",sep = ",")
 
 # location of center point barios and unidad menores
-load("data/barrios.names.location.Rda")
-load("data/menores.names.location.Rda")
+load("data/output/limites/donostia/barrios.names.location.Rda")
+load("data/output/limites/donostia/menores.names.location.Rda")
 
 # correct location of Egia name
 barrios.names.location[barrios.names.location$BAR_DS_O=="Egia",]$lat <- 43.31799
@@ -150,10 +149,12 @@ menor_m2 <-left_join(sf.points, test@data, by="id")
 barrios.names.location <- left_join(barrios.names.location, barrio_m2, by="BAR_DS_O") #cnames stores name location of barrio
 barrios.names.location <- barrios.names.location[!duplicated(barrios.names.location$BAR_DS_O),] # get only unique barrios
 
+png(filename="images/idealista/mapa-idealista-evolucion-precio-m2-barrios-donostia-2013-17.png",width = 900,height = 600)
 ggplot() +
   geom_polygon(data = barrio_m2, 
                aes(x = long, y = lat, group = group, fill = evol13_17), 
-               size = 0.05) +
+               colour="white",  
+               size = 0.5) +
   scale_fill_distiller(name="Evolución precios", palette = "RdBu",
                        breaks = pretty_breaks(n = 4),limits = c(-0.45, 0.45))+ #direction = 1, 
   scale_colour_gradient() +
@@ -176,20 +177,23 @@ ggplot() +
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") +
   geom_text(data=barrios.names.location, 
             aes(long.x, lat.x,
-                label = paste(evol13_17.y)),
+                label = paste(evol13_17)),
             # color = porcentajeviv), #substring(BAR_DS_O,1,2)," ",
             size=4, fontface="bold",color = "black")
+dev.off()
 
 # evolución precio metro cuadrado por unidad menor
 menores.names.location <- merge(menores.names.location, menor_m2, by.x="menores", by.y="Unidad_men") #menores.names.location stores name location of menores
 menores.names.location <- menores.names.location[!duplicated(menores.names.location$menores),] # get only unique unidades menores
 
+png(filename="images/idealista/mapa-idealista-evolucion-precio-m2-menores-donostia-2013-17.png",width = 900,height = 600)
 ggplot() +
   geom_polygon(data = menor_m2, 
-               aes(x = long, y = lat, group = group,fill = evol13_17),colour="black",  
-               size = 0.05) +
+               aes(x = long, y = lat, group = group,fill = evol13_17),
+               colour="white",  
+               size = 0.2) +
   scale_fill_distiller(name="Evolución precios", palette = "RdBu",
-                       breaks = pretty_breaks(n = 4),limits = c(-1.22, 1.22))+ #direction = 1,
+                       breaks = pretty_breaks(n = 4),limits = c(-1.52, 1.52))+ #direction = 1,
   scale_colour_gradient() +
   # coord_map() +
   coord_quickmap(xlim=c(-2.08, -1.92), ylim=c(43.2775,43.335))  +
@@ -210,8 +214,41 @@ ggplot() +
        caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") +
   geom_text(data=menores.names.location, 
             aes(long.x, lat.x,
-                label = paste(evol13_17,menores,sep = "\n")),
-            # color = porcentajeviv), #substring(BAR_DS_O,1,2)," ",
+                label = paste(evol13_17,sep = "\n")),
             size=3,color = "black")
+dev.off()
 
-# ----- Mapas evolución ----
+# ----- Mapas precio ----
+names(menor_m2)[names(menor_m2) == '2017'] <- 'x2017'
+
+png(filename="images/idealista/mapa-idealista-precio-m2-menores-donostia-2017.png",width = 900,height = 600)
+ggplot() +
+  geom_polygon(data = menor_m2, 
+               aes(x = long, y = lat, group = group,fill = x2017), #TODO: no funciona
+               colour="white",  
+               size = 0.2) +
+  scale_fill_distiller(name="Precios €/m2 mes", palette = "Blues",
+                       breaks = pretty_breaks(n = 4),direction = 1)+ #,
+  scale_colour_gradient() +
+  # coord_map() +
+  coord_quickmap(xlim=c(-2.08, -1.92), ylim=c(43.2775,43.335))  +
+  theme_nothing(legend = TRUE) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text = element_blank(),
+    legend.position="top"
+  ) +
+  labs(title = "Precio m2 por unidad menor en Donostia",
+       subtitle = "2017.",
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Idealista. Gráfico: lab.montera34.com/airbnb") 
+  geom_text(data=menores.names.location, 
+            aes(long.x, lat.x,
+                label = paste(evol13_17,sep = "\n")),
+            size=3,color = "black")
+dev.off()
