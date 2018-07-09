@@ -1,6 +1,5 @@
 # Habitaciones vs Viviendas completas en Airbnb Donostia
 
-
 # ---- Load libraries -----
 library(tidyverse)
 # read shapes
@@ -8,14 +7,15 @@ library(rgdal)
 library(ggmap) #for theme nothing
 library(reshape)
 
-
 # ------ Load files ----------
 # Load shapes
-barrios <- readOGR("data/barrios-donostia.geojson")
-menores <- readOGR("data/original/shapes/unidades-menores-donostia.geojson")
+barrios <- readOGR("data/barrios-donostia_simplificado.geojson")
+menores <- readOGR("data/output/limites/unidades-menores-donostia_cleaned-merged.geojson")
 mar <- readOGR("data/original/shapes/mar-donostia.geojson")
 
-# Load points: 
+viviendas_barrios <- read.delim("data/viviendas-barrios-donostia.csv",sep = ",")
+
+# Load Airbnb points: 
 # Airbnb listings 2017
 airbnb2017 <- read.delim("data/listings_donostia_simple.csv",sep = ",")
 # Translate room type
@@ -27,8 +27,8 @@ airbnb2017merged <- read.delim("data/output/170400_listings-airbnb-donostia_insi
 levels(airbnb2017merged$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
 # Airbnb listings 2018
-load("data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.Rda")
-airbnb2018 <- airbnb
+# load("data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.Rda")
+airbnb2018 <- read.delim("data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.csv",sep = ",")
 # Translate room type
 levels(airbnb2018$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
@@ -75,7 +75,7 @@ png(filename="images/hab-viv-barras-airbnb-donostia-2017-2018.png",width = 600,h
     coord_flip()
 dev.off()
 
-# ------------barras por tipos de habitación-------
+# -----------barras por tipos de habitación-------
 airbnb1_2017 <- airbnb2017 %>% 
   group_by(room_type) %>% 
   summarise(count=n()) 
@@ -114,7 +114,7 @@ ggplot(airbnb1,aes(x = room_type, y = count)) +
   coord_flip()
 dev.off()
 
-# ------------barras por barrios-------
+# -----------barras por barrios-------
 airbnb2 <- airbnb2017merged  %>% 
   group_by(barrio,room_type) %>% 
   summarise(count=n()) %>% 
@@ -167,18 +167,18 @@ airbnb3$name_complete <- paste(airbnb3$barrio,airbnb3$room_type,sep = "_")
 
 airbnb_20172018 <- merge(airbnb2,airbnb3, by="name_complete" )
 
+airbnb_20172018$evolution <- round(airbnb_20172018$count.y / airbnb_20172018$count.x * 100,digits=2)
+airbnb_20172018$dif <- airbnb_20172018$count.y - airbnb_20172018$count.x 
 
-months<-24
-year1<-c(1338229205,5212325386,31725112511)
-year3<-c(1372425378,8836570075,49574919628)
-group<-c("Group C", "Group B", "Group A")
-a<-data.frame(year1,year3,group)
+# slope graph based on https://acaird.github.io/computers/r/2013/11/27/slopegraphs-ggplot
+# create list of labels
+l2017<-paste(airbnb_20172018$count.x,airbnb_20172018$barrio.x,sep="-")
+l2018<-paste(airbnb_20172018$count.y,airbnb_20172018$barrio.x,sep="-")
+ldif <-paste( airbnb_20172018$barrio, airbnb_20172018$dif,sep=" ")
 
-ggplot(a) + 
-  geom_segment(aes(x=0,xend=months,y=year1,yend=year3),size=.75)
-
+# slope graph evolution 2017-2018 per barrio
 ggplot(airbnb_20172018) +
-  geom_segment(aes(x=0,xend=12,y=count.x,yend=count.y,colour=room_type.x),size=.5) +
+  geom_segment(aes(x=0,xend=12,y=count.x,yend=count.y),size=.5) +
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
   theme(
     panel.grid.minor.y = element_blank(), 
@@ -194,11 +194,14 @@ ggplot(airbnb_20172018) +
      y = "número de anuncios",
      x = NULL,
      caption = "Datos: datahippo.org. Gráfico: lab.montera34.com/airbnb") +
-  geom_text(label=barrio.x, y=airbnb_20172018$count.x, x=rep.int(12,length(airbnb_20172018)),hjust=-0.2,size=3.5) +
+  # geom_text(label=l2017, y=airbnb_20172018$count.x, x=rep.int(0,nrow(airbnb_20172018)), hjust=1.2,size=3.5) +
+  # geom_text(label=l2018, y=airbnb_20172018$count.y, x=rep.int(12,nrow(airbnb_20172018)), hjust=-0.2,size=3.5) +
+  geom_text(label=ldif, y=airbnb_20172018$count.y-((airbnb_20172018$count.y-airbnb_20172018$count.x)/2), 
+            x=rep.int(6,nrow(airbnb_20172018)), hjust=1,vjust=-1,size=3.5) +
   geom_text(label="2017", x=0, y=(1.02*(max(airbnb_20172018$count.x,airbnb_20172018$count.y))),hjust= 0,size=3) +
   geom_text(label="2018", x=12, y=(1.02*(max(airbnb_20172018$count.x,airbnb_20172018$count.y))),hjust= 1,size=3)
 
-# ------------barras por unidades menores-------
+# -----------barras por unidades menores-------
 airbnb3 <- airbnb2017merged  %>% 
   group_by(umenores,room_type) %>% 
   summarise(count=n()) %>% 
@@ -284,4 +287,64 @@ ggplot() +
        x = NULL,
        y = NULL,
        caption = "Datos: datahippo.org. Gráfico: lab.montera34.com/airbnb")
+dev.off()
+
+# ----- Prepara datos por barrios -------
+airbnb_barrio <- data.frame(table(airbnb2017merged$barrio))
+names(airbnb_barrio) <- c("barrio","airbnb_2017")
+airbnb_barrio2 <- data.frame(table(airbnb2018$barrio))
+names(airbnb_barrio2) <- c("barrio","airbnb_2018")
+
+# Merge data in single data frame
+por_barrios <- merge(viviendas_barrios,airbnb_barrio,by.x="barrios",by.y="barrio")
+por_barrios <- merge(por_barrios,airbnb_barrio2,by.x="barrios",by.y="barrio")
+
+# ----- Cantidad Airbnb por barrios: barras -------
+# reshape into long format
+p <- reshape(por_barrios[,-c(2:4,7:8)], direction = "long", varying = list(names(por_barrios[,-c(2:4,7:8)])[2:3]), v.names = "Value", 
+             idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
+# creates factor for year
+p$Year <- as.factor(p$Year)
+# Plots in bars
+png(filename="images/airbnb/n-anuncios-airbnb-barrios-donostia-2017-2018.png",width = 450,height = 700)
+ggplot(p,aes(x = reorder(barrios, Value), y = Value)) +
+  geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
+  coord_flip() +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Presencia de Airbnb en barrios: 2018 y 2018",
+       subtitle = "Cantidad de anuncios de Airbnb en Donostia",
+       y = "nº anuncios Airbnb",
+       x = NULL,
+       caption = "Datos: Insideairbnb (marzo 2017) y Datahippo (abril 2017, abril 2018). Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+dev.off()
+
+# ----- Ratio Airbnb por barrios: barras -------
+por_barrios$ratio2017 <- round(por_barrios$airbnb_2017 / por_barrios$Total.Viviendas.familiares *100,digits = 2)
+por_barrios$ratio2018 <- round(por_barrios$airbnb_2018 / por_barrios$Total.Viviendas.familiares *100,digits = 2)
+
+# reshape into long format
+n <- reshape(por_barrios[,-c(2:6)], direction = "long", varying = list(names(por_barrios[,-c(2:6)])[2:3]), v.names = "Value", 
+             idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
+
+# creates factor for year
+n$Year <- as.factor(n$Year)
+# Plots in bars
+png(filename="images/airbnb/ratio-airbnb-barrios-donostia-2017-2018.png",width = 450,height = 700)
+ggplot(n,aes(x = reorder(barrios, Value), y = Value)) +
+  geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
+  coord_flip() +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Presencia de Airbnb en barrios: 2018 y 2018",
+       subtitle = "Ratio de anuncios de Airbnb por cada 100 viviendas en Donostia",
+       y = "ratio anuncios Airbnb / 100 viviendas",
+       x = NULL,
+       caption = "Datos: Insideairbnb (marzo 2017) y Datahippo (abril 2017, abril 2018). Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
 dev.off()
