@@ -129,7 +129,8 @@ idealista_barrio_medio_m2_matrix$dif13_17 <- idealista_barrio_medio_m2_matrix[,7
 idealista_barrio_medio_m2_matrix$evol13_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3])/idealista_barrio_medio_m2_matrix[,3],digits = 1)
 # Porcentaje de cambio 2016-2017
 idealista_barrio_medio_m2_matrix$evol16_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,6])/idealista_barrio_medio_m2_matrix[,6],digits = 1)
-as.data.frame.matrix(idealista_barrio_medio_m2_matrix)
+
+write.csv(idealista_barrio_medio_m2_matrix, file = "data/output/idealista/por-barrios-idealista-renta-precio-m2-donostia-2012-2017.csv", row.names = FALSE)
 
 ft <- formattable( idealista_barrio_medio_m2_matrix[,-c(2,8:10)],
              list( area(col = 1:6) ~ color_tile("transparent", "#2b8cbe")))

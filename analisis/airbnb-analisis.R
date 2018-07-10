@@ -1,9 +1,9 @@
-# Analisis Airbnb
-# Habitaciones vs Viviendas completas en Airbnb Donostia
-# numero anuncios por barrio
-# ratio anuncios por barrio por vivienda
-# numero plazas
-# ratio plazas por habitante
+# Análisis de Airbnb en Donostia
+# -Habitaciones vs Viviendas completas
+# -numero anuncios por barrio
+# -ratio anuncios por barrio por vivienda
+# -numero plazas
+# -ratio plazas por habitante
 
 # ---- Load libraries -----
 library(tidyverse)
@@ -413,9 +413,8 @@ grid.arrange(plot2,plot1,ncol=2)
 dev.off()
 
 # Extra calculo diferencia y evolucion
-por_barrios_2 <- por_barrios
-por_barrios_2$dif <- por_barrios_2$ratio2018 - por_barrios_2$ratio2017
-por_barrios_2$evol <- round((por_barrios_2$ratio2018 - por_barrios_2$ratio2017)/por_barrios_2$ratio2017 *100,digits = 2)
+por_barrios$dif <- por_barrios$ratio2018 - por_barrios$ratio2017
+por_barrios$evol <- round((por_barrios$ratio2018 - por_barrios$ratio2017)/por_barrios$ratio2017 *100,digits = 2)
 
 # ----- Calculo cantidad de plazas de Airbnb por barrios -----
 plazas_2017 <- airbnb2017merged %>% 
@@ -535,3 +534,25 @@ plot2 <- ggplot(q,aes(x = reorder(barrio, -pos_ratio2018), y = Value)) + #order 
 png(filename="images/airbnb/barras-mariposa-n-y-ratio-plazas-airbnb-barrios-donostia-2017-2018.png",width = 900,height = 800)
 grid.arrange(plot2,plot1,ncol=2)
 dev.off()
+
+# -------- Comparativa Airbnb, VUT e Idealista ------ 
+
+vut <- read.delim(file="data/output/vut-donostia/por-barrios-censo-viviendas-turisticas-donostia-180301.csv", sep=",")
+idealista_barrios <- read.delim(file="data/output/idealista/por-barrios-idealista-renta-precio-m2-donostia-2012-2017.csv", sep = ",")
+
+barrios_compara <- por_barrios
+
+names(barrios_compara) <- c("barrios","total","Total.Viviendas.familiares","Total.establecimientos.colectivos",
+                        "airbnb_2017_count","airbnb_2018_count","airbnb_ratio_2017","airbnb_ratio_2018","pos_airbnb_2018",
+                        "pos_ratio_aribnb_2018","airbnb_dif_17_18","airbnb_evol_17_18")
+
+barrios_compara <- merge(barrios_compara[,-(2:4)],vut,by.x="barrios",by.y="barrio")
+
+plazas_temp <- plazas
+names(plazas_temp) <- c("barrio","airbnb_plazas_2017","airbnb_plazas_2018","habitantes","airbnb_dif_17_18","airbnb_evol_17_18",
+                   "airbnb_ratio_plazas_2017","airbnb_ratio_plazas_2018","pos_airbnb_plazas_2018","pos_airbnb_ratio_plazas_2018")
+barrios_compara <- merge(barrios_compara,plazas_temp,by.x="barrios",by.y="barrio")
+
+names(idealista_barrios) <- c("barrio","idealista_m2_2012","idealista_m2_2013","idealista_m2_2014","idealista_m2_2015","idealista_m2_2016",
+                              "idealista_m2_2017","idealista_m2_dif_13_17","idealista_evol_13_17","idealista_evol_16_17")
+barrios_compara <- merge(barrios_compara,idealista_barrios,by.x="barrios",by.y="barrio")
