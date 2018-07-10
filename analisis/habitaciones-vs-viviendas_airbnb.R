@@ -318,7 +318,7 @@ por_barrios[ order(-por_barrios[,8]), ]$pos_ratio2018 <- 1:17
 
 # ----- Cantidad Airbnb por barrios: barras -------
 # reshape into long format
-p <- reshape(por_barrios[,-c(2:4,9,10)], direction = "long", varying = list(names(por_barrios[,-c(2:4,7)])[2:3]), v.names = "Value", 
+p <- reshape(por_barrios[,-c(2:4,7,8)], direction = "long", varying = list(names(por_barrios[,-c(2:4,7)])[2:3]), v.names = "Value", 
              idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
 # creates factor for year
 p$Year <- as.factor(p$Year)
@@ -340,14 +340,14 @@ ggplot(p,aes(x = reorder(barrios, Value), y = Value)) + #order by Value or by ra
 dev.off()
 
 # reshape into long format
-n <- reshape(por_barrios[,-c(2:6,9,10)], direction = "long", varying = list(names(por_barrios[,-c(2:6)])[2:3]), v.names = "Value", 
+n <- reshape(por_barrios[,-c(2:6)], direction = "long", varying = list(names(por_barrios[,-c(2:6)])[2:3]), v.names = "Value", 
              idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
 
 # creates factor for year
 n$Year <- as.factor(n$Year)
 # Plots in bars
 png(filename="images/airbnb/ratio-airbnb-barrios-donostia-2017-2018.png",width = 450,height = 700)
-ggplot(n,aes(x = reorder(barrios, Value), y = Value)) +
+ggplot(n,aes(x = reorder(barrios, -pos_ratio2018), y = Value)) +
   geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
   coord_flip() +
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
@@ -365,7 +365,7 @@ dev.off()
 # -------- Gráfico mariposa anuncios --------
 # inspired/copied from https://github.com/meneos/R_Dataviz/blob/master/RENTABILIDAD%20INMUEBLES%20MADRID/rentabilidad_distritos.R
 # library(gridExtra)
-plot1 <- ggplot(n,aes(x = reorder(barrios, Value), y = Value)) +
+plot1 <- ggplot(n,aes(x = reorder(barrios, -pos_ratio2018), y = Value)) +
   geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
   coord_flip() +
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
@@ -384,7 +384,7 @@ labs(title = "",
      caption = "Datos: Insideairbnb (marzo 2017) y Datahippo (abril 2017, abril 2018). Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
 
-plot2 <- ggplot(p,aes(x = reorder(barrios, ratio2018), y = Value)) + #order by Value or by ratio2018
+plot2 <- ggplot(p,aes(x = reorder(barrios, -pos_ratio2018), y = Value)) + #order by Value or by ratio2018
   geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
   coord_flip() +
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
