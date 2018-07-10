@@ -1,4 +1,9 @@
+# Analisis Airbnb
 # Habitaciones vs Viviendas completas en Airbnb Donostia
+# numero anuncios por barrio
+# ratio anuncios por barrio por vivienda
+# numero plazas
+# ratio plazas por habitante
 
 # ---- Load libraries -----
 library(tidyverse)
@@ -301,9 +306,19 @@ names(airbnb_barrio2) <- c("barrio","airbnb_2018")
 por_barrios <- merge(viviendas_barrios,airbnb_barrio,by.x="barrios",by.y="barrio")
 por_barrios <- merge(por_barrios,airbnb_barrio2,by.x="barrios",by.y="barrio")
 
+# ----- Ratio Airbnb por barrios: barras -------
+por_barrios$ratio2017 <- round(por_barrios$airbnb_2017 / por_barrios$Total.Viviendas.familiares *100,digits = 2)
+por_barrios$ratio2018 <- round(por_barrios$airbnb_2018 / por_barrios$Total.Viviendas.familiares *100,digits = 2)
+
+# provides position for reordering
+por_barrios$pos_airbnb_2018 <- 1
+por_barrios[ order(-por_barrios[,6]), ]$pos_airbnb_2018 <- 1:17
+por_barrios$pos_ratio2018 <- 1
+por_barrios[ order(-por_barrios[,8]), ]$pos_ratio2018 <- 1:17
+
 # ----- Cantidad Airbnb por barrios: barras -------
 # reshape into long format
-p <- reshape(por_barrios[,-c(2:4,7)], direction = "long", varying = list(names(por_barrios[,-c(2:4,7)])[2:3]), v.names = "Value", 
+p <- reshape(por_barrios[,-c(2:4,9,10)], direction = "long", varying = list(names(por_barrios[,-c(2:4,7)])[2:3]), v.names = "Value", 
              idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
 # creates factor for year
 p$Year <- as.factor(p$Year)
@@ -316,7 +331,7 @@ ggplot(p,aes(x = reorder(barrios, Value), y = Value)) + #order by Value or by ra
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) +
-  labs(title = "Presencia de Airbnb en barrios: 2018 y 2018",
+  labs(title = "Presencia de Airbnb en barrios: 2017 y 2018",
        subtitle = "Cantidad de anuncios de Airbnb en Donostia",
        y = "nº anuncios Airbnb",
        x = NULL,
@@ -324,12 +339,8 @@ ggplot(p,aes(x = reorder(barrios, Value), y = Value)) + #order by Value or by ra
   coord_flip()
 dev.off()
 
-# ----- Ratio Airbnb por barrios: barras -------
-por_barrios$ratio2017 <- round(por_barrios$airbnb_2017 / por_barrios$Total.Viviendas.familiares *100,digits = 2)
-por_barrios$ratio2018 <- round(por_barrios$airbnb_2018 / por_barrios$Total.Viviendas.familiares *100,digits = 2)
-
 # reshape into long format
-n <- reshape(por_barrios[,-c(2:6)], direction = "long", varying = list(names(por_barrios[,-c(2:6)])[2:3]), v.names = "Value", 
+n <- reshape(por_barrios[,-c(2:6,9,10)], direction = "long", varying = list(names(por_barrios[,-c(2:6)])[2:3]), v.names = "Value", 
              idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
 
 # creates factor for year
@@ -343,7 +354,7 @@ ggplot(n,aes(x = reorder(barrios, Value), y = Value)) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) + 
-  labs(title = "Presencia de Airbnb en barrios: 2018 y 2018",
+  labs(title = "Presencia de Airbnb en barrios: 2017 y 2018",
        subtitle = "Ratio de anuncios de Airbnb por cada 100 viviendas en Donostia",
        y = "ratio anuncios Airbnb / 100 viviendas",
        x = NULL,
@@ -353,7 +364,7 @@ dev.off()
 
 # -------- Gráfico mariposa anuncios --------
 # inspired/copied from https://github.com/meneos/R_Dataviz/blob/master/RENTABILIDAD%20INMUEBLES%20MADRID/rentabilidad_distritos.R
-library(gridExtra)
+# library(gridExtra)
 plot1 <- ggplot(n,aes(x = reorder(barrios, Value), y = Value)) +
   geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
   coord_flip() +
@@ -390,7 +401,7 @@ plot2 <- ggplot(p,aes(x = reorder(barrios, ratio2018), y = Value)) + #order by V
     plot.margin = unit(c(0.3,0,0.4,4), "cm")
   ) +
   scale_y_reverse() + #invert axis
-  labs(title = "Presencia de Airbnb en barrios de Donostia",
+  labs(title = "Presencia de Airbnb en barrios de Donostia por nº de anuncios",
        subtitle = "Número de anuncios de Airbnb",
        y = "nº anuncios Airbnb",
        x = NULL,
@@ -444,7 +455,7 @@ ggplot(q,aes(x = reorder(barrio, -pos_plazas2018), y = Value)) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) + 
-  labs(title = "Presencia de Airbnb en barrios: 2018 y 2018",
+  labs(title = "Presencia de Airbnb en barrios: 2017 y 2018",
        subtitle = "Plazas anunciadas en Airbnb en Donostia por barrio",
        y = "nº de plazas ofertadas",
        x = NULL,
@@ -467,7 +478,7 @@ ggplot(r,aes(x = reorder(barrio, -pos_ratio2018), y = Value)) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) + 
-  labs(title = "Presencia de Airbnb en barrios: 2018 y 2018",
+  labs(title = "Presencia de Airbnb en barrios: 2017 y 2018",
        subtitle = "Ratio de de plazas anunciadas en Airbnb por cada 100 habitantes en Donostia por barrio",
        y = "plazas anunciadas por cada 100 habitantes",
        x = NULL,
@@ -506,15 +517,15 @@ plot2 <- ggplot(q,aes(x = reorder(barrio, -pos_ratio2018), y = Value)) + #order 
     plot.title = element_text(face = "bold", hjust = 0),
     plot.subtitle = element_text(hjust = 0.2),
     plot.caption = element_text(margin = margin(20,0,0,0)), 
-    axis.text.y = element_text(hjust = 0.5),
-    # axis.text.y = element_blank(),
+    # axis.text.y = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     panel.grid.major.y = element_blank(),
     legend.position="bottom",
     plot.margin = unit(c(0.3,0,0.4,4), "cm")
   ) +
   scale_y_reverse() + #invert axis
-  labs(title = "Presencia de Airbnb en barrios de Donostia",
+  labs(title = "Presencia de Airbnb en barrios de Donostia por nº de plazas",
        subtitle = "Número de plazas de Airbnb",
        y = "nº plazas Airbnb",
        x = NULL,
