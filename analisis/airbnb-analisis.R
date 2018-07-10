@@ -413,8 +413,8 @@ grid.arrange(plot2,plot1,ncol=2)
 dev.off()
 
 # Extra calculo diferencia y evolucion
-por_barrios$dif <- por_barrios$ratio2018 - por_barrios$ratio2017
-por_barrios$evol <- round((por_barrios$ratio2018 - por_barrios$ratio2017)/por_barrios$ratio2017 *100,digits = 2)
+por_barrios$airbnb_dif17_18 <- por_barrios$ratio2018 - por_barrios$ratio2017
+por_barrios$airbnb_evol17_18 <- round((por_barrios$ratio2018 - por_barrios$ratio2017)/por_barrios$ratio2017 *100,digits = 2)
 
 # ----- Calculo cantidad de plazas de Airbnb por barrios -----
 plazas_2017 <- airbnb2017merged %>% 
@@ -549,10 +549,30 @@ names(barrios_compara) <- c("barrios","total","Total.Viviendas.familiares","Tota
 barrios_compara <- merge(barrios_compara[,-(2:4)],vut,by.x="barrios",by.y="barrio")
 
 plazas_temp <- plazas
-names(plazas_temp) <- c("barrio","airbnb_plazas_2017","airbnb_plazas_2018","habitantes","airbnb_dif_17_18","airbnb_evol_17_18",
+names(plazas_temp) <- c("barrio","airbnb_plazas_2017","airbnb_plazas_2018","habitantes","airbnb_plazas_dif_17_18","airbnb_plazas_evol_17_18",
                    "airbnb_ratio_plazas_2017","airbnb_ratio_plazas_2018","pos_airbnb_plazas_2018","pos_airbnb_ratio_plazas_2018")
 barrios_compara <- merge(barrios_compara,plazas_temp,by.x="barrios",by.y="barrio")
 
 names(idealista_barrios) <- c("barrio","idealista_m2_2012","idealista_m2_2013","idealista_m2_2014","idealista_m2_2015","idealista_m2_2016",
                               "idealista_m2_2017","idealista_m2_dif_13_17","idealista_evol_13_17","idealista_evol_16_17")
 barrios_compara <- merge(barrios_compara,idealista_barrios,by.x="barrios",by.y="barrio")
+
+names(barrios_compara)
+
+plot(barrios_compara$airbnb_ratio_2018,barrios_compara$ratio_vut)
+
+library(GGally)
+# comparando todas las variables
+png(filename="images/compara/pairs-comparativa-airbnb-vut-idealista-barrios-donostia-2017-2018.png",width = 2000,height = 2000)
+ggpairs(barrios_compara,
+        columns = c(2:5,8:10,13,17:20,29:31),
+        title = "buscando correlaciones",
+        aes(alpha = 0.4))
+dev.off()
+
+png(filename="images/compara/pairs-comparativa-select-airbnb-vut-idealista-barrios-donostia-2017-2018.png",width = 1200,height = 1200)
+ggpairs(barrios_compara,
+        columns = c(4,9,13,19,30:31),
+        title = "buscando correlaciones",
+        aes(alpha = 0.4))
+dev.off()
