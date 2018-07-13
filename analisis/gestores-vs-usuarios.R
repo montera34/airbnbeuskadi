@@ -81,10 +81,25 @@ ggplot(listings) +
        caption = "Datos: Insideairbnb (marzo 2017). Gráfico: lab.montera34.com/airbnb")
 dev.off()
 
+tipo_user <- listings %>% group_by(type_of_host) %>% summarise(alojamientos=n())
+png(filename="images/airbnb/superuser/barras-airbnb-tipo-usuario-mínimo-numero-noches-medias-2017.png",width = 800,height = 600)
+ggplot(min_night,aes(x=type_of_host,y=media)) +
+  geom_bar(stat="identity") +
+  coord_flip()+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) + 
+  labs(title = "Mínimo número de noches según tipo de propietario",
+       subtitle = "Airbnb en Donostia.",
+       y = "nº mínimo de noches",
+       x = "tipo de host",
+       caption = "Datos: Insideairbnb (marzo 2017). Gráfico: lab.montera34.com/airbnb")
+dev.off()
 
 min_night <- listings %>% group_by(type_of_host) %>% summarise(media=mean(minimum_nights))
 
-png(filename="images/airbnb/superuser/puntos-airbnb-tipo-usuario-mínimo-numero-noches-medias-2017.png",width = 800,height = 600)
+png(filename="images/airbnb/superuser/barras-airbnb-tipo-usuario-mínimo-numero-noches-medias-2017.png",width = 800,height = 600)
 ggplot(min_night,aes(x=type_of_host,y=media)) +
   geom_bar(stat="identity") +
   coord_flip()+
