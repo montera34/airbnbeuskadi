@@ -26,8 +26,8 @@ with open(outputpath, "w") as outfile:
 
             # uncomment the following two lines
             # to debug with first 5 rows of input file
-            if count == 5:
-                break
+            #if count == 5:
+            #    break
 
             count +=1
             time.sleep(3)
