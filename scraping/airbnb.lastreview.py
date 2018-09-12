@@ -3,9 +3,9 @@ import urllib2
 from bs4 import BeautifulSoup
 import time
 	 
-inputids = "input.list" # nombre del archivo con los ids de los listings, uno por linea
+inputids = "listings_faltan2.csv" # nombre del archivo con los ids de los listings, uno por linea
 
-outputpath = "180423_listings-airbnb-donostia_datahippo_with-last-review_2.csv"
+outputpath = "180423_listings-airbnb-donostia_datahippo_with-last-review_5.csv"
 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
@@ -22,7 +22,7 @@ with open(outputpath, "w") as outfile:
       for counter in f:
           counter = counter.strip()
       #for counter in [8482514,1405167]:
-          time.sleep(3)
+          time.sleep(4)
           count +=1
           print count
           url = "https://www.airbnb.es/rooms/"+str(counter)
