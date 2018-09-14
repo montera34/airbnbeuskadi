@@ -24,10 +24,23 @@ zona_c <- readOGR("data/original/vut-donostia/VUT_zonaC-donostia-WGS84.geojson")
 # Load data
 
 # Load VUT
-vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",", encoding = "utf-8")
+# Select one file
+# vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",", encoding = "utf-8")
+vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-20180914_barrio-umenor.csv",sep = ",", encoding = "utf-8")
+# Select date
+date <- "Septiembre 2018"
+date_abr <- "20180914"
+
+# Fix data> missing barrio and unicada menor for VUT (september 2018)
+vut[27,]$barrio <- "Centro"
+vut[27,]$umenores <- "Area Romantica"
+
 # create taxonomy for estado
 levels(vut$estado)
 vut$estadox <- strapplyc( as.character(vut$estado), ".*_(.*)", simplify = TRUE)
+# clean wrong character in accent
+levels(vut$tipo) <- c("Habitaciones de uso turístico","Viviendas de uso turístico")
+
 # add noise to location of points
 vut$latr <- jitter(vut$latitude, factor=1, amount = 0.001)
 vut$lonr <- jitter(vut$longitude, factor=1, amount = 0.001)
@@ -37,6 +50,7 @@ levels(vut$umenores)[levels(vut$umenores)=="Sag�es"] <- "Sagües"
 table(vut$estado)
 table(vut$estadox)
 table(vut$tipo)
+table(vut$tipo,vut$estadox)
 
 # Load viviendas por barrio
 viviendas_barrios <-  read.delim("data/viviendas-barrios-donostia.csv",sep = ",")
@@ -56,7 +70,7 @@ cbPalette1 <- c("#f4830f","#017c0a")
 
 vut1$estadox <- factor(vut1$estadox,levels = c("Favorable","Tramitacion"))
 
-png(filename="images/vut-barras-estado-tramitacion-barrio-2018.png",width = 900,height = 600)
+png(filename=paste("images/vut-donostia/vut-barras-estado-tramitacion-barrio-",date_abr,".png",sep = ""),width = 900,height = 600)
 ggplot(vut1,aes(x = reorder(barrio, suma), y = count, fill=factor(vut1$estadox, levels=c("Tramitacion","Favorable"))    )) +
   scale_fill_manual(values=cbPalette1) +
   geom_bar(stat="identity")+
@@ -67,14 +81,14 @@ ggplot(vut1,aes(x = reorder(barrio, suma), y = count, fill=factor(vut1$estadox, 
   ) +
   guides(fill=guide_legend(title="Estado")) +
   labs(title = "Viviendas de uso turístico según estado de tramitación por barrio",
-       subtitle = "Donostia. Marzo 2018.",
+       subtitle = paste("Donostia. ",date,".",sep=""),
        x = NULL,
        y = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
 dev.off()
 
-vut1$percent <- round( vut1$count / 1242 * 100, digits=1 )
+vut1$percent <- round( vut1$count / nrow(vut) * 100, digits=1 )
 vut1$percent_estado <- round( vut1$count / vut1$suma * 100, digits=1 )
 
 vut2 <- vut %>% 
@@ -83,7 +97,7 @@ vut2 <- vut %>%
   mutate(suma=sum(count)) %>%
   arrange(-count)
 
-png(filename="images/hab-viv-barras-barrio-vut-2018.png",width = 900,height = 600)
+png(filename=paste("images/vut-donostia/hab-viv-barras-barrio-vut-",date_abr,".png",sep = ""),width = 900,height = 600)
 ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=tipo)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
@@ -92,14 +106,14 @@ ggplot(vut2,aes(x = reorder(barrio, suma), y = count, fill=tipo)) +
     legend.position="top"
   ) +
   labs(title = "Viviendas de uso turístico según habitación/apartamento por barrio",
-       subtitle = "Donostia. Marzo 2018.",
+       subtitle = paste("Donostia. ",date,".",sep=""),
        x = NULL,
        y = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
   coord_flip()
 dev.off()
 
-vut2$percent <- round( vut2$count / 1242 * 100, digits=1 )
+vut2$percent <- round( vut2$count / nrow(vut) * 100, digits=1 )
 vut2$percent_tipo <- round( vut2$count / vut2$suma * 100, digits=1 )
 
 # ----- barras por unidad menor-------
@@ -110,7 +124,7 @@ vut3 <- vut %>%
   mutate(suma=sum(count)) %>%
   arrange(-count)
 
-png(filename="images/viviendas-umenor-barras-vut-2018.png",width = 900,height = 1800)
+png(filename=paste("images/vut-donostia/viviendas-umenor-barras-vut-",date_abr,".png",sep = ""),width = 900,height = 1800)
 ggplot(vut3[vut3$tipo=="Viviendas de uso turístico",],aes(x = reorder(umenores,suma), y = count,fill=estadox)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
@@ -119,7 +133,7 @@ ggplot(vut3[vut3$tipo=="Viviendas de uso turístico",],aes(x = reorder(umenores,
     legend.position="top"
   ) +
   labs(title = "Viviendas de uso turístico según estado de tramitación por unidad menor",
-       subtitle = "Donostia. Marzo 2018.",
+       subtitle =  paste("Donostia. ",date,".",sep=""),
        x = NULL,
        y = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
@@ -142,7 +156,7 @@ vut4 <- vut %>%
   summarise(count=n()) %>%
   mutate(suma=sum(count))
 
-png(filename="images/hab-viv-barras-vut-donostia-2018.png",width = 900,height = 600)
+png(filename=paste("images/vut-donostia/hab-viv-barras-vut-donostia-",date_abr,".png",sep = ""),width = 900,height = 600)
 ggplot(vut4 ,aes(x = tipo, y = count,fill=estadox)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
@@ -150,7 +164,7 @@ ggplot(vut4 ,aes(x = tipo, y = count,fill=estadox)) +
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) +
   labs(title = "Habitaciones y viviendas (VUT) en Donostia.Estado tramitación",
-       subtitle = "Marzo 2017",
+       subtitle =  paste("Donostia. ",date,".",sep=""),
        y = "número de viviendas",
        x = NULL,
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
@@ -169,9 +183,9 @@ barrios_vut <- merge(barrios_vut,viviendas_barrios,by.x="barrio",by.y="barrios")
 barrios_vut$ratio_vut <- round(barrios_vut$vut / barrios_vut$Total.Viviendas.familiares *100,digits=2)
 # barrios_vut$ratio_airbnb <- round(barrios_vut$count_vals / barrios_vut$Total.Viviendas.familiares *100,digits=2)
 
-write.csv(barrios_vut[,-c(3)], file = "data/output/vut-donostia/por-barrios-censo-viviendas-turisticas-donostia-180301.csv", row.names = FALSE)
+write.csv(barrios_vut[,-c(3)], file = "data/output/vut-donostia/por-barrios-censo-viviendas-turisticas-donostia-180914.csv", row.names = FALSE)
 
-png(filename="images/ratio-vut-barras-donostia-barrio-2018.png",width = 900,height = 600)
+png(filename=paste("images/vut-donostia/ratio-vut-barras-donostia-barrio-",date_abr,".png",sep = ""),width = 900,height = 600)
 ggplot(barrios_vut,aes(x = reorder(barrio, ratio_vut), y = ratio_vut)) +
   geom_bar(stat="identity")+
   theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
@@ -180,7 +194,7 @@ ggplot(barrios_vut,aes(x = reorder(barrio, ratio_vut), y = ratio_vut)) +
     legend.position="top"
   ) +
   labs(title = "Ratio de viviendas de uso turístico (VUT) por cada 100 viviendas por barrio",
-       subtitle = "Donostia. Marzo 2018.",
+       subtitle =  paste("Donostia. ",date,".",sep=""),
        x = NULL,
        y = "VUT por cada 100 viviendas familiares",
        caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
@@ -191,7 +205,7 @@ dev.off()
 
 cbPalette <- c("#017c0a","#f4830f")
 
-png(filename="images/map-vut-tramitacion-donostia-abril2018.png",width = 1200,height = 900)
+png(filename=paste("images/vut-donostia/map-vut-tramitacion-donostia-",date_abr,".png",sep = ""),width = 1200,height = 900)
 ggplot() + 
   # mar y río
   geom_polygon(data=mar,aes(x=long, y=lat,group=group),fill="#f0f5fc",alpha=0.5) +
@@ -223,7 +237,8 @@ ggplot() +
   coord_quickmap(xlim=c(-2.02, -1.96), ylim=c(43.30,43.331)) + #zoom 
   guides(colour = guide_legend(override.aes = list(alpha = 0.9))) +
   labs(title = "Habitaciones y viviendas de uso turístico según estado de tramitación",
-     subtitle = "Un total de 1242 elementos. 1117 viviendas (764 en tramitación) y 125 habitaciones (73 en tramitación).",
+     # subtitle = "Un total de xxx elementos. xxx viviendas (xxx en tramitación) y xxx habitaciones (xx en tramitación).",
+     subtitle =  paste("Donostia. ",date,".",sep=""),
      x = NULL,
      y = NULL,
      caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb")
