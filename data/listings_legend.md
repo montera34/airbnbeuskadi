@@ -1,15 +1,16 @@
 Listing files fields
 ===
 
-This file contains the list of of variables (listing CSV file fields) and its correspondence with Airbnb website sections
+This file contains the list of of variables (listing CSV file fields) and its correspondence with Airbnb website sections in InsideAirbnb full listing file.
+The summary listing includes just the marked with *.
 
-	id				airbnb object id
+	id*				airbnb object id
 	listing_url			airbnb url
 	scrape_id	
 	last_scraped			date format YYYY-MM-DD
 
 ## OVERVIEW TAB
-	name				Title
+	name*				Title
 	summary				"About this listing" section in Airbnb
 	space				"The space" subsection of Description section
 	description			same as summary?
@@ -26,9 +27,9 @@ This file contains the list of of variables (listing CSV file fields) and its co
 	xl_picture_url			extra large size image url
 
 ## THE HOST TAB (user information)
-	host_id				user id
+	host_id*				user id
 	host_url			user url
-	host_name			user name
+	host_name*			user name
 	host_since			user sign up date
 	host_location			user location
 	host_about			user description
@@ -47,7 +48,7 @@ This file contains the list of of variables (listing CSV file fields) and its co
 
 ## LISTING LOCATION
 	street
-	neighbourhood
+	neighbourhood*
 	neighbourhood_cleansed		?
 	neighbourhood_group_cleansed	Provincia in Spain
 	city
@@ -57,13 +58,13 @@ This file contains the list of of variables (listing CSV file fields) and its co
 	smart_location			City and country
 	country_code
 	country
-	latitude
-	longitude
+	latitude*
+	longitude*
 	is_location_exact		t = true / f = false
 
 ## THE SPACE INFO
 	property_type			House...
-	room_type			Private room...
+	room_type*			Private room, Entire home/apt, Shared room
 	accommodates			how many people can be hosted
 	bathrooms			number
 	bedrooms			number
@@ -73,29 +74,29 @@ This file contains the list of of variables (listing CSV file fields) and its co
 	square_feet
 
 ## PRICES SECTION
-	price				per night. in dollars
-	weekly_price			in dollars
-	monthly_price			in dollars
+	price				per night (in local currency: € for Spain, USD for USA)
+	weekly_price			per week
+	monthly_price			per month
 	security_deposit		
 	cleaning_fee
 	guests_included			how many people allowed
 	extra_people			price per night
-	minimum_nights
+	minimum_nights*
 	maximum_nights
 
 ## RESERVATION INFO
 	calendar_updated		when was updated the availability calendar
-	has_availability		?
-	availability_30
-	availability_60
-	availability_90
-	availability_365
+	has_availability		t = true / f = false
+	availability_30     days available to be booked in the following 30 days 
+	availability_60     days available to be booked in the following 60 days
+	availability_90     days available to be booked in the following 90 days
+	availability_365*   days available to be booked in the following 365 days
 	calendar_last_scraped		when was scraped the calendar
 
 ## REVIEWS TAB
-	number_of_reviews		number
+	number_of_reviews*		number
 	first_review			date. format: YYYY-MM-DD
-	last_review			date. format: YYYY-MM-DD
+	last_review*			date. format: YYYY-MM-DD
 	review_scores_rating		number. 0-10
 	review_scores_accuracy		number. 0-10
 	review_scores_cleanliness	number. 0-10
@@ -109,10 +110,10 @@ This file contains the list of of variables (listing CSV file fields) and its co
 	license				type of license
 	jurisdiction_names
 
-
+## Others
 	instant_bookable		t = true / f = false
 	cancellation_policy		4 types
 	require_guest_profile_picture	t = true / f = false
 	require_guest_phone_verificationt = true / f = false
-	calculated_host_listings_count	user's listings
+	calculated_host_listings_count*	user's listings
 	reviews_per_month		average
