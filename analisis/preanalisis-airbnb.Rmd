@@ -1,0 +1,518 @@
+---
+title: "Efecto Airbnb en Barcelona"
+output: html_document
+---
+
+```{r setup, echo = FALSE, warning=FALSE, message=FALSE}
+# Este documento en Rmarkdown está pensado para producir un informe a partir de datos de Airbnb de InsideAirbnb.com (http://insideairbnb.com/)
+
+# Selecciona región/lugar a analizar en las dos siguientes variables
+local_activo_name <- "Barcelona" #cambia 'Zarautz' por el municipio que quieras analizar
+fecha <- "2018-09-11"
+  
+# Instala y carga librerías ----
+library(tidyverse)
+library(knitr,quietly=T)
+library(kableExtra)
+library(reshape2) # for melt
+# library(ggplot2) #ya incluido en tidyverse
+# library(dplyr) #ya incluido en tidyverse
+# for maps and theme nothing
+library(ggmap)
+# read geojson
+library(rgdal)
+
+
+# Carga datos -----
+# introduce el path de tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
+local_activo <- read.delim("../data/original/airbnb/180911/listings_barcelona_insideairbnb.csv",sep = ",")
+attach(local_activo)
+
+# shapes
+barrios <- readOGR("../data/original/contornos/barrios_geo.json")
+distritos <- readOGR("../data/original/contornos/distritos_geo.json")
+municipios <- readOGR("../data/original/contornos/recintos_municipales_inspire_peninbal_wgs84_export_provincia-barcelona_geo.json")
+
+# Define paleta de color
+# palette1 <- c("#2171b5","#6baed6","#bdd7e7","#fee5d9")
+palette1 <- c("#4292c6","#6baed6","#9ecae1","#fee5d9")
+```
+
+Este informe se ha generado automáticamente con R a partir del [script de Rmarkdown](https://github.com/montera34/airbn.barcelona/tree/master/analisis/montera34/preanalisis-airbnb.Rmd) disponible en el [repositorio airbnb.barcelona](https://github.com/montera34/airbn.barcelona).
+
+## Datos
+
++ InsideAirbnb.com/get-the-data `r local_activo_name`
++ Fecha scraping: `r fecha`
+
+## Resumen
+
+En **`r local_activo_name`** hay publicados `r format(nrow(local_activo), big.mark='.')` anuncios de Airbnb, que tienen capacidad para `r format(sum(na.omit(local_activo$accommodates)), big.mark='.') ` plazas (accommodates). 
+
+De esos anuncios `r format(nrow(local_activo[!(local_activo$license==""),]), big.mark='.')` tienen rellena la parte de la licencia  (lo que supone un `r format(round(100*nrow(local_activo[!(local_activo$license==""),])/nrow(local_activo), 1), nsmall = 1, decimal.mark=',')`% del municipio), lo que no quiere decir que todas esas licencias indicadas sean válidas.
+
+Estos anuncios (listings, en la terminología de Airbnb) han sido publicados por `r format(length(unique(local_activo$host_id)), big.mark='.')` anfitriones. 
+
+## Anfitriones en Airbnb
+```{r anf1, echo = FALSE, warning=FALSE, eval=FALSE}
+# To change plot order of bars, change levels in underlying factor
+# reorder_size <- function(x) {
+#   factor(x, levels = names(sort(table(x))))
+# }
+# 
+# ggplot(local_activo) +geom_bar(mapping = aes(reorder_size(host_id))) + coord_flip() + theme(axis.text.y = element_blank()) + labs(y = "Número de anuncios", x = "anfitrion")
+
+# Otra forma de hacer lo mismo
+# nanuncios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+# nanuncios <- nanuncios[order(-nanuncios)] #reordena de mayor a menor
+# anfitriones_anuncios <- data.frame(nanuncios) # crea data frame
+# anfitriones_anuncios$host_id <- row.names(nanuncios)
+
+# gráfico (repite el anterior, por eso está comentado)
+# ggplot(anfitriones_anuncios) + geom_bar(stat='identity', aes(x = host_id, y = Freq)) + labs(x = "Número de anuncios", y = "anfitrion") + coord_flip()
+    
+# exporta datos a csv
+# write.csv(propietarios, "data/output/propietarios_id_n_alojamientos_donostia.csv") 
+```
+
+### Los anfitriones con más alojamientos
+
+```{r table_propietarios, echo = FALSE, warning=FALSE, eval=TRUE}
+# propietarios <- table(local_activo$host_id) #crea tabla con frecuencias (count) de anfitriones (host_id) con anuncios
+n_alojamientos <- local_activo %>% group_by(host_id,host_name) %>% summarize(alojamientos = n(),plazas = sum(accommodates) ) %>% arrange(desc(alojamientos))
+
+n_alojamientos <- data.frame(n_alojamientos) # crea data frame
+
+kable(n_alojamientos[1:25,],caption = "Los 325 anfitriones con más alojamientos")
+# propietarios_nalojamientos[1:30,]
+# nalojamientos <- donostia %>%
+#   group_by(host_id) %>%
+#   summarize(sum.alojamientos=count(requires_license)) %>%
+# arrange(desc(sum.alojamientos))
+# kable(nalojamientos[1:20,],caption = "Los 30 anfitriones con más alojamientos (id)")
+
+ggplot(data = n_alojamientos[1:25,] ,aes(x = reorder(host_name,alojamientos), y = alojamientos)) +
+  geom_col() +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position = "bottom"
+  ) +
+  labs(title = "Número de alojamientos por anfitrión: top 25",
+       subtitle = "Septiembre 2018.",
+       y = "número de anuncios",
+       x = "anfitriones",
+       caption = "Datos: InsideAirbnb. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+```
+
+#### En el mapa
+
+##### Top 5
+
+```{r anfitriones_map_1, echo = FALSE, warning=FALSE, eval=TRUE}
+# converts host_id to factor to be able to colour by it
+local_activo$host_id <- as.factor(local_activo$host_id)
+
+ggplot() +
+geom_polygon(data = municipios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_polygon(data = barrios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_point(data= local_activo,
+           aes(x=longitude, y=latitude),alpha=0.03,size = 0.07)+
+geom_point(data= local_activo[host_id %in% n_alojamientos[1:5,]$host_id,],
+         aes(x=longitude, y=latitude, color=host_name),alpha=0.6,size = 1,) + #color="blue"
+coord_quickmap(xlim=c(2.125, 2.225), ylim=c(41.37,41.4142))  +
+theme_nothing(legend = TRUE) +
+theme_minimal(base_family = "Roboto Condensed", base_size = 12) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  panel.background = element_rect(fill="#EEEEFF",color = "grey",size = 0.25),
+  legend.position = "top"
+) +
+labs(title=paste("Cada punto es un alojamiento de los top 5 anfitriones según alojamientos", sep = ""))  +
+guides(colour = guide_legend(override.aes = list(size=3))) 
+```
+
+```{r anfitriones_map_top1, echo = FALSE, warning=FALSE, eval=TRUE}
+ggplot() +
+geom_polygon(data = municipios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_polygon(data = barrios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_point(data= local_activo,
+           aes(x=longitude, y=latitude),alpha=0.03,size = 0.07)+
+geom_point(data= local_activo[host_id %in% n_alojamientos[1,]$host_id,],
+         aes(x=longitude, y=latitude, color=host_name),alpha=0.6,size = 1,) + #color="blue"
+coord_quickmap(xlim=c(2.125, 2.225), ylim=c(41.37,41.4142))  +
+theme_nothing(legend = TRUE) +
+theme_minimal(base_family = "Roboto Condensed", base_size = 12) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  panel.background = element_rect(fill="#EEEEFF",color = "grey",size = 0.25),
+  legend.position = "top"
+) +
+labs(
+  title=paste("Cada punto es un alojamiento del top 1 de anfitriones según alojamientos", sep = ""),
+  subtitle = paste(nrow(local_activo[host_id %in% n_alojamientos[1,]$host_id,]),
+                   " alojamientos en ", local_activo_name,  sep = "")
+  ) +
+  guides(colour = guide_legend(override.aes = list(size=3))) 
+```
+
+```{r anfitriones_map_top2, echo = FALSE, warning=FALSE, eval=TRUE}
+ggplot() +
+geom_polygon(data = municipios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_polygon(data = barrios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_point(data= local_activo,
+           aes(x=longitude, y=latitude),alpha=0.03,size = 0.07)+
+geom_point(data= local_activo[host_id %in% n_alojamientos[2,]$host_id,],
+         aes(x=longitude, y=latitude, color=host_name),alpha=0.6,size = 1,) + #color="blue"
+coord_quickmap(xlim=c(2.125, 2.225), ylim=c(41.37,41.4142))  +
+theme_nothing(legend = TRUE) +
+theme_minimal(base_family = "Roboto Condensed", base_size = 12) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  panel.background = element_rect(fill="#EEEEFF",color = "grey",size = 0.25),
+  legend.position = "top"
+) +
+labs(
+  title=paste("Cada punto es un alojamiento del top 2 de anfitriones según alojamientos", sep = ""),
+  subtitle = paste(nrow(local_activo[host_id %in% n_alojamientos[2,]$host_id,]),
+                   " alojamientos en ", local_activo_name,  sep = "")
+  ) +guides(colour = guide_legend(override.aes = list(size=3))) 
+```
+```{r anfitriones_map_top3, echo = FALSE, warning=FALSE, eval=TRUE}
+ggplot() +
+geom_polygon(data = municipios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_polygon(data = barrios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_point(data= local_activo,
+           aes(x=longitude, y=latitude),alpha=0.03,size = 0.07)+
+geom_point(data= local_activo[host_id %in% n_alojamientos[3,]$host_id,],
+         aes(x=longitude, y=latitude, color=host_name),alpha=0.6,size = 1,) + #color="blue"
+coord_quickmap(xlim=c(2.125, 2.225), ylim=c(41.37,41.4142))  +
+theme_nothing(legend = TRUE) +
+theme_minimal(base_family = "Roboto Condensed", base_size = 12) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  panel.background = element_rect(fill="#EEEEFF",color = "grey",size = 0.25),
+  legend.position = "top"
+) +
+labs(
+  title=paste("Cada punto es un alojamiento del top 3 de anfitriones según alojamientos", sep = ""),
+  subtitle = paste(nrow(local_activo[host_id %in% n_alojamientos[3,]$host_id,]),
+                   " alojamientos en ", local_activo_name,  sep = "")
+  ) +guides(colour = guide_legend(override.aes = list(size=3))) 
+```
+
+```{r anfitriones_map_top4, echo = FALSE, warning=FALSE, eval=TRUE}
+ggplot() +
+geom_polygon(data = municipios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_polygon(data = barrios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_point(data= local_activo,
+           aes(x=longitude, y=latitude),alpha=0.03,size = 0.07)+
+geom_point(data= local_activo[host_id %in% n_alojamientos[4,]$host_id,],
+         aes(x=longitude, y=latitude, color=host_name),alpha=0.6,size = 1,) + #color="blue"
+coord_quickmap(xlim=c(2.125, 2.225), ylim=c(41.37,41.4142))  +
+theme_nothing(legend = TRUE) +
+theme_minimal(base_family = "Roboto Condensed", base_size = 12) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  panel.background = element_rect(fill="#EEEEFF",color = "grey",size = 0.25),
+  legend.position = "top"
+) +
+labs(
+  title=paste("Cada punto es un alojamiento del top 4 de anfitriones según alojamientos", sep = ""),
+  subtitle = paste(nrow(local_activo[host_id %in% n_alojamientos[4,]$host_id,]),
+                   " alojamientos en ", local_activo_name,  sep = "")
+  ) +
+guides(colour = guide_legend(override.aes = list(size=3))) 
+```
+
+```{r anfitriones_map_top5, echo = FALSE, warning=FALSE, eval=TRUE}
+ggplot() +
+geom_polygon(data = municipios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_polygon(data = barrios,
+             aes(x = long, y = lat, group = group),
+             color = "grey", fill="white", size = 0.1) +
+geom_point(data= local_activo,
+           aes(x=longitude, y=latitude),alpha=0.03,size = 0.07)+
+geom_point(data= local_activo[host_id %in% n_alojamientos[5,]$host_id,],
+         aes(x=longitude, y=latitude, color=host_name),alpha=0.6,size = 1,) + #color="blue"
+coord_quickmap(xlim=c(2.125, 2.225), ylim=c(41.37,41.4142))  +
+theme_nothing(legend = TRUE) +
+theme_minimal(base_family = "Roboto Condensed", base_size = 12) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  panel.background = element_rect(fill="#EEEEFF",color = "grey",size = 0.25),
+  legend.position = "top"
+) +
+labs(
+  title=paste("Cada punto es un alojamiento del top 5 de anfitriones según alojamientos", sep = ""),
+  subtitle = paste(nrow(local_activo[host_id %in% n_alojamientos[5,]$host_id,]),
+                   " alojamientos en ", local_activo_name,  sep = "")
+  ) +
+guides(colour = guide_legend(override.aes = list(size=3))) 
+```
+
+### Distribución de número de plazas por usuario
+
+```{r table_anfitriones_distribucion, echo = FALSE, warning=FALSE,, eval=TRUE}
+ggplot(data=n_alojamientos, aes(alojamientos)) + 
+  geom_histogram(breaks=seq(0, 200, by = 1)) + 
+  ylim(0,200) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank(),
+    legend.position = "bottom"
+  ) +
+  labs(title="Histograma de número de alojamientos por usuario",
+       subtitle = "Septiembre 2018.",
+        x="número de alojamientos por anfitrión", 
+        y="número de propoietarios",
+   caption = "Datos: InsideAirbnb. Gráfico: lab.montera34.com/airbnb") 
+
+# res <- hist(n_alojamientos$alojamientos)
+
+``` 
+
+### Los anfitriones con más plazas
+
+```{r table_anfitriones_2, echo = FALSE, warning=FALSE,, eval=TRUE}
+# 
+naccommodates <- group_by(local_activo, host_id, host_name) %>% summarise( plazas = sum(accommodates),alojamientos = n() ) %>%  arrange(desc(plazas))
+ 
+# naccommodates[1:30,]
+kable(naccommodates[1:30,],caption = "Los 30 anfitriones con más plazas")
+
+ggplot(naccommodates) +
+  geom_bar(stat='identity', aes(x = reorder(host_id,plazas), y = plazas)) + coord_flip() + theme(axis.text.y = element_blank()) + 
+  labs(x = "anfitriones", y = "nº anuncios", title= "Número de plazas por anfitrión" ) 
+# + scale_y_continuous(breaks=seq(0,300,10))
+
+# ggplot(naccommodates[1:25,] ) +
+#   geom_bar(stat='identity', aes(x = reorder(host_id,plazas), y = plazas)) + coord_flip() + theme(axis.text.y = element_blank()) + 
+#   labs(x = "anfitriones", y = "nº anuncios", title= "número de plazas por anfitrión top 30" ) 
+
+ggplot(data = naccommodates[1:25,] ,aes(x = reorder(host_name,plazas), y = plazas)) +
+  geom_col() +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position = "bottom"
+  ) +
+  labs(title = "Número de plazas por usuario: top 25",
+       subtitle = "Septiembre 2018.",
+       y = "número de plazas",
+       x = "anfitriones",
+       caption = "Datos: InsideAirbnb. Gráfico: lab.montera34.com/airbnb") +
+  coord_flip()
+```
+
+
+### Distribución de número de plazas por anfitriones
+
+```{r table_anfitriones_distribucion_2, echo = FALSE, warning=FALSE,, eval=TRUE}
+ggplot(data=naccommodates, aes(plazas)) + 
+  geom_histogram(breaks=seq(0, 30, by = 1)) + 
+  # ylim(c(0,7000))+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank(),
+    legend.position = "bottom"
+  ) +
+  labs(
+    title="Histograma de plazas por usuario",
+    subtitle="Usuarios con 30 plazas o menos (cajones de 1). Septiembre 2018.",
+    y="número de plazas", 
+    x="número de plazas por usuario",
+   caption = "Datos: InsideAirbnb. Gráfico: lab.montera34.com/airbnb")
+
+ggplot(data=naccommodates, aes(plazas)) + 
+  geom_histogram(breaks=seq(30, 1100, by = 10)) + 
+  xlim(30,1100)+
+  ylim(0,20)+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank(),
+    legend.position = "bottom"
+  ) +
+  labs(
+    title="Histograma de plazas por usuario",
+    subtitle="Usuarios con 30 plazas o más (cajones de 10). Septiembre 2018.",
+    y="número de plazas", 
+    x="número de plazas por usuario",
+   caption = "Datos: InsideAirbnb. Gráfico: lab.montera34.com/airbnb")
+
+``` 
+
+```{r final_output_distribucion_1, echo = FALSE, warning=FALSE,, eval=TRUE}
+distribucion <- data.frame(matrix(0, ncol = 4, nrow = 3))
+names(distribucion) <- c("mas_de_5","n3.4","n2","n1")
+rownames(distribucion) <- c("anfitriones","alojamientos","plazas")
+
+# Calcul acuantos anfitriones tienen n alojamientos
+distribucion$n1[1] <- nrow(n_alojamientos[n_alojamientos$alojamientos == 1,])
+distribucion$n2[1] <- nrow(n_alojamientos[n_alojamientos$alojamientos == 2,])
+distribucion$n3.4[1] <- nrow(n_alojamientos[(n_alojamientos$alojamientos == 3 |n_alojamientos$alojamientos == 4) ,])
+distribucion$mas_de_5[1] <- nrow(n_alojamientos[n_alojamientos$alojamientos >4,])
+
+# Calcula cuantos alojamientos en total tienen los anfitriones con n alojamientos
+distribucion$n1[2] <- sum(n_alojamientos[n_alojamientos$alojamientos == 1,"alojamientos"])
+distribucion$n2[2] <- sum(n_alojamientos[n_alojamientos$alojamientos == 2,"alojamientos"])
+distribucion$n3.4[2] <- sum(n_alojamientos[(n_alojamientos$alojamientos == 3 |n_alojamientos$alojamientos == 4),"alojamientos"])
+distribucion$mas_de_5[2] <- sum(n_alojamientos[n_alojamientos$alojamientos >4,"alojamientos"])
+
+# length(unique(local_activo$id))
+# sum(distribucion[2,])
+
+# Calcula cuantas plazas en total tienen los anfitriones con n alojamientos
+distribucion$n1[3] <- sum(naccommodates[naccommodates$host_id %in% n_alojamientos[n_alojamientos$alojamientos == 1,]$host_id,]$plazas)
+distribucion$n2[3] <- sum(naccommodates[naccommodates$host_id %in% n_alojamientos[n_alojamientos$alojamientos == 2,]$host_id,]$plazas)
+distribucion$n3.4[3] <- sum(naccommodates[naccommodates$host_id %in% n_alojamientos[(n_alojamientos$alojamientos == 3 | n_alojamientos$alojamientos == 4),]$host_id,]$plazas)
+distribucion$mas_de_5[3] <- sum(naccommodates[naccommodates$host_id %in% n_alojamientos[n_alojamientos$alojamientos > 4,]$host_id,]$plazas)
+
+# Plot result in stacked bar chart
+# Add tipo as column
+distribucion$tipo <- rownames(distribucion)
+
+# Una forma de hacerlo
+# library(lattice)
+# barchart(n1+n2+n3.4~variable,data=distribucion)
+
+# Una forma de hacerlo
+# library(reshape2)
+dist.melt <- melt(distribucion,id.vars = "tipo")
+dist.melt$tipo <- as.factor(dist.melt$tipo)
+# Reorder levels for plot
+dist.melt$tipo <- factor(dist.melt$tipo, levels =c("anfitriones","alojamientos","plazas"))
+
+ggplot(dist.melt, aes(x = tipo, y = value,fill=variable)) +
+    geom_bar(stat='identity') + # add position = "fill" to make 100% bars 
+    scale_fill_manual(labels = c("Más de 5 anuncios", "3 o 4 anuncios", "2 anuncios", "1 anuncio"),values=palette1) +
+    theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+    theme(
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank(), 
+      panel.grid.major.x = element_blank()
+    ) +
+    labs(title = paste("Concentración de la oferta de Airbnb en ", local_activo_name, sep = ""),
+         subtitle = "Anfitriones, alojamientos y plazas",
+         y = "cantidad",
+         x = NULL,
+         caption = "Datos: Insideairbnb (septiembre 2018). Gráfico: lab.montera34.com/airbnb",
+          fill = "Nº de anuncios por anfitrión") +
+  geom_text(data = dist.melt[dist.melt$value > 1600,], aes(label =  format(value, big.mark="."), group=variable),
+              position = position_stack(vjust = 0.5), hjust = 0.4,
+              size=3,color="#000000")
+    
+# ggplot(dist.melt, aes(x = tipo, y = value,fill=variable)) +
+#     geom_bar(stat='identity',position = "fill") # add  to make 100% bars
+```
+
+```{r final_output_distribucion_2, echo = FALSE, warning=FALSE,, eval=TRUE}
+
+distribucion_per <- distribucion
+# Anfitriones
+distribucion_per[1,1:4] <- round(distribucion[1,1:4] / sum(distribucion[1,1:4]) * 100,1)
+# Alojamientos
+distribucion_per[2,1:4] <- round(distribucion[2,1:4] / sum(distribucion[2,1:4]) * 100,1)
+# plazas
+distribucion_per[3,1:4] <- round(distribucion[3,1:4] / sum(distribucion[3,1:4]) * 100,1)
+
+# Una forma de hacerlo
+dist_per.melt <- melt(distribucion_per,id.vars = "tipo")
+dist_per.melt$tipo <- as.factor(dist_per.melt$tipo)
+# Reorder levels for plot
+dist_per.melt$tipo <- factor(dist_per.melt$tipo, levels =c("anfitriones","alojamientos","plazas"))
+
+# ggplot(dist_per.melt, aes(x = tipo, y = value,fill=variable)) +
+#     geom_bar(stat='identity') # add position = "fill" to make 100% bars
+
+ggplot(dist_per.melt, aes(x = tipo, y = value,fill=variable)) +
+    geom_bar(stat='identity') + # add position = "fill" to make 100% bars 
+    scale_fill_manual(labels = c("Más de 5 anuncios", "3 o 4 anuncios", "2 anuncios", "1 anuncio"),values=palette1) +
+    theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+    theme(
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank(), 
+      panel.grid.major.x = element_blank()
+    ) +
+    labs(title = paste("Concentración de la oferta de Airbnb en ", local_activo_name, sep = ""),
+         subtitle = "Anfitriones, alojamientos y plazas",
+         y = "porcentaje",
+         x = NULL,
+         caption = "Datos: Insideairbnb (septiembre 2018). Gráfico: lab.montera34.com/airbnb",
+         fill = "Nº de anuncios por anfitrión") +
+  geom_text(data = dist_per.melt, aes(label =  format(value, nsmall = 1, decimal.mark=','), group=variable),
+              position = position_stack(vjust = 0.5), hjust = 0.4,
+              size=3,color="#000000")
+
+```
+
+```{r table_anfitriones_2b, echo = FALSE, warning=FALSE,, eval=TRUE}
+# calculates basic numbers
+n_hosts <- length(unique(local_activo$host_id))
+n_acommodates <- sum(local_activo$accommodates)
+```
+
+### Resumen
+
+Los 10 primeros anfitriones (`r format(round(100*10/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:10,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:10,3])/n_acommodates, 1), nsmall = 1)`% del total de plazas).
+
+Los 20 primeros anfitriones (`r format(round(100*20/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:20,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:20,3])/sum(local_activo$accommodates), 1), nsmall = 1)`% del total de plazas).
+
+Los 50 primeros anfitriones (`r format(round(100*50/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:50,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:50,3])/n_acommodates, 1), nsmall = 1)`% del total de plazas).
+
+Los 100 primeros anfitriones (`r format(round(100*100/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:100,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:100,3])/n_acommodates, 1), nsmall = 1)`% del total de plazas).
+
+Los 200 primeros anfitriones (`r format(round(100*200/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:200,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:200,3])/n_acommodates, 1), nsmall = 1)`% del total de plazas).
+
+Los 300 primeros anfitriones (`r format(round(100*300/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:300,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:300,3])/n_acommodates, 1), nsmall = 1)`% del total de plazas).
+
+Los 500 primeros anfitriones (`r format(round(100*500/n_hosts, 1), nsmall = 1)`% del total de anfitriones) con más plazas tienen `r sum(naccommodates[1:500,3])` plazas disponibles (que son el `r format(round(100*sum(naccommodates[1:500,3])/n_acommodates, 1), nsmall = 1)`% del total de plazas).
+
+## Licencias
+
+De los `r nrow(local_activo)` hay anuncios `r nrow(local_activo[!(local_activo$license==""),])` que tienen rellena la parte de la licencia  (lo que supone un `r format(round(100*nrow(local_activo[!(local_activo$license==""),])/nrow(local_activo), 1), nsmall = 1)` % del municipio).
+
+Estas son las licencias más repetidas:
+
+```{r licencias_1, echo = FALSE, warning=FALSE,, eval=TRUE}
+licencias <- as.data.frame(table(local_activo$license))
+
+licencias <- group_by(local_activo, license) %>% summarise( alojamientos = n() ) %>%  arrange(desc(alojamientos))
+
+kable(licencias[1:20,])
+```
