@@ -1,16 +1,25 @@
 ---
-title: "Efecto Airbnb en Donostia - San Sebastián"
+title: "Efecto Airbnb en Donostia: hosts"
 output: html_document
 ---
 
 ```{r setup, echo = FALSE, warning=FALSE, message=FALSE}
-# Este documento en Rmarkdown está pensado para producir un informe a partir de datos de Airbnb de InsideAirbnb.com (http://insideairbnb.com/)
+# Este documento en Rmarkdown está pensado para producir un informe a partir de datos de Airbnb de datahippo. Para datos de InsideAirbnb mira en https://github.com/montera34/airbnb.barcelona/tree/master/analisis/preanalisis-airbnb.Rmd
+# Estos scripts producen una serie de gráficos sobre los hosts (anfitriones), distribución y concentración en una determinada ciudad.
 
-# Selecciona región/lugar a analizar en las dos siguientes variables
+# Selecciona variables de configuración
+# región/lugar, fechas a analizar...
 local_activo_name <- "Donostia" #cambia 'Zarautz' por el municipio que quieras analizar
 fecha <- "2018-09-26" # date last scraping
+# Donostia
 coord_x <- c(-2.02, -1.96)
 coord_y <- c(43.30,43.33)
+# Euskadi
+# coord_x <- c(-3.5, -1.75)
+# coord_y <- c(42.4,43.5)
+# Bilbao
+# coord_x <- c(-2.98, -2.9)
+# coord_y <- c(43.24,43.28)
 desde <- "2018-03-01"
 caption_1 <- "Datos: datahippo.org (2018-09-26). Gráfico: lab.montera34.com/airbnb"
 caption_2 <- paste("Datos: datahippo.org activos desde ", desde ,". Info: lab.montera34.com", sep = "")
@@ -31,8 +40,11 @@ library(rgdal)
 
 # Carga datos -----
 # introduce el path de tu archivo listings. Necesitas desactivar Quotes, porque el texto incluye \"
-  # local_activo <- read.delim("../data/original/airbnb/180911/listings_barcelona_insideairbnb.csv",sep = ",")
+# local_activo <- read.delim("../data/original/airbnb/180911/listings_barcelona_insideairbnb.csv",sep = ",")
 local_activo <- read.delim("../data/original/donostia/datahippo/180926/listings-airbnb_donostia_datahippo.csv",sep = ",")
+# local_activo <- read.delim("../data/original/euskadi/datahippo/180926/listings-airbnb_euskadi_datahippo.csv",sep = ",")
+# local_activo <- read.delim("../data/original/bilbao/datahippo/180926/listings-airbnb_bilbao_datahippo.csv",sep = ",")
+
 # Parse dates
 local_activo$found_date <- as.Date(as.POSIXct(local_activo$found))
 local_activo$revised_date <- as.Date(as.POSIXct(local_activo$revised))
@@ -49,7 +61,7 @@ mar <- readOGR("../data/original/shapes/mar-donostia.geojson")
 palette1 <- c("#4292c6","#6baed6","#9ecae1","#fee5d9")
 ```
 
-Este informe se ha generado automáticamente con R a partir del [script de Rmarkdown](https://github.com/montera34/airbneuskadi/tree/master/analisis/preanalisis-airbnb.Rmd) disponible en el [repositorio airbnbeuskadi](https://github.com/montera34/airbneuskadi).
+Este informe se ha generado automáticamente con R a partir del [script de Rmarkdown](https://github.com/montera34/airbneuskadi/tree/master/analisis/hosts-analysis.Rmd) disponible en el [repositorio airbnbeuskadi](https://github.com/montera34/airbneuskadi).
 
 ## Datos
 
@@ -58,11 +70,11 @@ Este informe se ha generado automáticamente con R a partir del [script de Rmark
 
 ## Resumen
 
-En **`r local_activo_name`** se han publicado `r format(nrow(local_activo), big.mark='.')` anuncios de Airbnb desde que Datahippo guarda registro, que han tenido capacidad para `r format(sum(na.omit(local_activo$accommodates)), big.mark='.') ` plazas (accommodates). 
+En **`r local_activo_name`** se han publicado `r format(nrow(local_activo), big.mark='.')` anuncios de Airbnb desde que Datahippo guarda registro, que han tenido capacidad para `r format(sum(na.omit(local_activo$capacity)), big.mark='.') ` plazas (accommodates). 
 
 De esos anuncios `r format(nrow(local_activo[!(local_activo$license==""),]), big.mark='.')` tienen rellena la parte de la licencia  (lo que supone un `r format(round(100*nrow(local_activo[!(local_activo$license==""),])/nrow(local_activo), 1), nsmall = 1, decimal.mark=',')`% del municipio), lo que no quiere decir que todas esas licencias indicadas sean válidas.
 
-Estos anuncios (listings, en la terminología de Airbnb) han sido publicados por `r format(length(unique(local_activo$host_id)), big.mark='.')` anfitriones. 
+Estos anuncios (listings, en la terminología de Airbnb) han sido publicados por `r format(length(unique(local_activo$host.id)), big.mark='.')` anfitriones. 
 
 PERO
 
