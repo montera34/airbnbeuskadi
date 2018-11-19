@@ -106,8 +106,11 @@ reviseddates <- reviseddates[order(reviseddates$dates),]
 reviseddates$dates <- as.Date(reviseddates$dates)
 ```
 
-Es interesante repasar en qué fechas el scraper de datahippo.org revisó (campo "revised") los anuncios, esto es, volvió a guardar la información porque los consideró activso (hay `r length(unique(local_activo$revised_date))` fechas distintas de "revised"). En la siguiente lista se indican las fechas y el número de anuncios con esa fecha:
-`r reviseddates`
+Es interesante repasar en qué fechas el scraper de datahippo.org revisó (campo "revised") los anuncios, esto es, volvió a guardar la información porque los consideró activso (hay `r nrow(reviseddates)` fechas distintas de "revised"). En la siguiente lista se indican las fechas y el número de anuncios con esa fecha:
+```{r reviseddates_table, echo = FALSE, warning=FALSE, message=FALSE}
+kable(reviseddates,caption = "")
+```
+
 
 ```{r reviseddates_plot, echo = FALSE, warning=FALSE, message=FALSE}
 # plot(reviseddates)
