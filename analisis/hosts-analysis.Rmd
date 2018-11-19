@@ -20,7 +20,7 @@ coord_y <- c(43.30,43.33)
 # Bilbao
 # coord_x <- c(-2.98, -2.9)
 # coord_y <- c(43.24,43.28)
-desde <- "2018-03-01"
+desde <- "2018-03-01" # fecha desde la cual se filtran los que tienen su fecha "revised" posterior
 caption_1 <- "Datos: datahippo.org (2018-09-26). Gráfico: lab.montera34.com/airbnb"
 caption_2 <- paste("Datos: datahippo.org activos desde ", desde ,". Info: lab.montera34.com", sep = "")
 
@@ -97,6 +97,38 @@ De esos `r format(nrow(local_activo), big.mark='.')` anuncios han sido "encontra
 | 2018-09-01 | `r format(nrow(local_activo[revised_date > "2018-09-01",]), big.mark='.')` | |
 | 2018-09-15 | `r format(nrow(local_activo[revised_date > "2018-09-15",]), big.mark='.')` | `r format(round(100* nrow(local_activo[revised_date > "2018-09-15",])/nrow(local_activo), 1 ), decimal.mark=',')`|
 | 2018-09-20 | `r format(nrow(local_activo[revised_date > "2018-09-20",]), big.mark='.')` | `r format(round(100* nrow(local_activo[revised_date > "2018-09-20",])/nrow(local_activo), 1 ), decimal.mark=',')`|
+
+```{r reviseddates, echo = FALSE, warning=FALSE, message=FALSE}
+# calculate frequency of listings in revised dates
+reviseddates <- as.data.frame(table(local_activo$revised_date))
+colnames(reviseddates) <- c("dates","count")
+reviseddates <- reviseddates[order(reviseddates$dates),]
+reviseddates$dates <- as.Date(reviseddates$dates)
+```
+
+Es interesante repasar en qué fechas el scraper de datahippo.org revisó (campo "revised") los anuncios, esto es, volvió a guardar la información porque los consideró activso (hay `r length(unique(local_activo$revised_date))` fechas distintas de "revised"). En la siguiente lista se indican las fechas y el número de anuncios con esa fecha:
+`r reviseddates`
+
+```{r reviseddates_plot, echo = FALSE, warning=FALSE, message=FALSE}
+# plot(reviseddates)
+
+reviseddates$t <- 1
+
+ggplot(reviseddates, aes(dates, t)) +
+  geom_point(aes(size = count),alpha=0.3 ) +
+theme(
+  panel.grid = element_blank(),
+  axis.title = element_blank(),
+  axis.text.y = element_blank(),
+  # axis.text = element_blank(),
+  panel.background = element_rect(fill="#FFFFFF",color = "grey",size = 0.25),
+  legend.position = "top",
+  plot.caption=element_text(size=9)
+) +
+labs(title=paste("Cantidad y fechas de anuncios en ", local_activo_name ," con 'revised'", sept=""),
+     subtitle = "Fechas en las que hubo seguro scraping",
+     caption = caption_1)  
+```
 
 ```{r filter, echo = FALSE, warning=FALSE, message=FALSE}
 # Create filtered by date listings
