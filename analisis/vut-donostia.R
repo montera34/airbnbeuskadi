@@ -74,6 +74,42 @@ table(vut$tipo,vut$estado)
 cbPalette <- c("#017c0a","#f4830f")
 
 # ----- Barras por barrios-------
+vut0 <- vut %>%
+  group_by(barrio) %>% 
+  summarise(count=n()) %>% 
+  arrange(count)
+
+cbPalette0 <- c("#FF8888","#FFAAAA","#EEEEEE","#CCCCCC","#EEEEEE","#CCCCCC","#EEEEEE","#CCCCCC",
+                "#EEEEEE","#CCCCCC","#EEEEEE","#CCCCCC","#EEEEEE","#CCCCCC","#EEEEEE","#CCCCCC")
+
+png(filename=paste("images/vut-donostia/vut-barras-barrio-",date_abr,".png",sep = ""),width = 900,height = 400)
+ggplot( data = vut0, aes(x = 1, y = count, 
+                         fill=factor(barrio, levels=c("Centro","Gros","Antiguo","Amara Berri",
+                                                       "Egia","Ibaeta","Aiete","Intxaurrondo","Ibaiondo","Ategorrieta-Ulia",
+                                                       "Miramon-Zorroaga","Miracruz-Bidebieta","Loiola",
+                                                       "Igeldo","Altza","Añorga","Martutene")))) +
+  scale_fill_manual(values=cbPalette0) +
+  geom_bar(stat="identity") +
+  # scale_y_continuous(limits = c(0,625), expand = c(0, 0)) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank(),
+    legend.position="right", axis.text = element_blank()
+    
+  ) +
+  guides(fill=guide_legend(title="Barrio")) +
+  labs(title = "Viviendas de uso turístico por barrio",
+       subtitle = paste("Donostia. ",date,".",sep=""),
+       x = NULL,
+       y = NULL,
+       caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb") +
+  annotate("text", x = 1, y = 800, label = "Centro y Gros (75,6%)", size = 6) +
+  annotate("text", x = 1, y = 200, label = "Resto de barrios", size = 5) +
+  coord_flip()
+dev.off()
+
+# ----- Barras por barrios y estado-------
 vut1 <- vut %>%
   group_by(barrio,estado) %>% 
   # group_by(barrio,umenores,tipo,estado) %>% 
@@ -227,6 +263,8 @@ ggplot(vut4 ,aes(x = tipo, y = count,group =estado)) +
   coord_flip()
 dev.off()
 
+
+
 # --------cálculo de ratio VUT por nº viviendas-------
 barrios_vut <- vut %>%
   group_by(barrio) %>% 
@@ -265,7 +303,7 @@ dev.off()
 
 cbPalette <- c("#017c0a","#f4830f")
 
-png(filename=paste("images/vut-donostia/map-vut-tramitacion-donostia-",date_abr,"-barrios_zoom.png",sep = ""),width = 900,height = 600)
+png(filename=paste("images/vut-donostia/map-vut-tramitacion-donostia-",date_abr,"_zoom.png",sep = ""),width = 900,height = 600)
 ggplot() + 
   # mar y río
   geom_polygon(data=mar,aes(x=long, y=lat,group=group),fill="#f0f5fc",alpha=0.5) +
@@ -284,9 +322,9 @@ ggplot() +
              # alpha=0.9,size = 2)+
   # barrios o unidades menores
   geom_path(data=barrios,aes(x=long, y=lat,group=group), colour="black",size = 0.1)+
-  geom_path(data=barrios[barrios@data$BAR_DS_O == "Centro" | barrios@data$BAR_DS_O == "Gros",],
-            aes(x=long, y=lat,group=group),
-            colour="black",size = 0.7)+
+  # geom_path(data=barrios[barrios@data$BAR_DS_O == "Centro" | barrios@data$BAR_DS_O == "Gros",],
+  #           aes(x=long, y=lat,group=group),
+  #           colour="black",size = 0.7)+
   # Theme options: 
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
   theme(
