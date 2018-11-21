@@ -1,6 +1,8 @@
 # VUT oficiales Donostia
 # Este archivo genera mapas basados en los datos oficiales de viviendas y habitaciones turísticas
 # según la web del Ayuntamiento de Donostia (descargado en data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_WGS84.csv).
+# Hay datos disponibles para abril y septiembre 2018, fecha de las descarga. Selecciona uno u otro.
+# Los gráficos se guardan en el directorio images/vut-donostia/
 
 # ------ Load libraries------
 library(tidyverse)
@@ -26,14 +28,14 @@ viviendas_barrios <-  read.delim("data/viviendas-barrios-donostia.csv",sep = ","
 
 # Load VUT data ---------
 
-# Load VUT
+# Load VUT 
 # Select one file
-# Abril 2018
+# Abril 2018 ----
 vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv",sep = ",", encoding = "utf-8")
 date <- "Abril 2018"
 date_abr <- "20180301"
 
-# Septiembre 2018
+# Septiembre 2018 ----
 vut <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-20180914_barrio-umenor.csv",sep = ",", encoding = "utf-8")
 date <- "Septiembre 2018"
 date_abr <- "20180914"
@@ -49,8 +51,10 @@ vut$estadox <- factor(vut$estadox,levels = c("Favorable","Tramitacion"))
 vut$estadox <- factor(vut$estadox,levels(vut$estadox)[c(2,1)])
 
 # Changes estadox name by estado
-colnames(vut) <- c("estado_orig","tipo","direccion","x","y","longitude","latitude", "barrio","umenores","estado")
+# April
 colnames(vut) <- c("estado_orig","tipo","direccion","longitude","latitude", "barrio","umenores","estado")
+# September
+colnames(vut) <- c("estado_orig","tipo","direccion","x","y","longitude","latitude", "barrio","umenores","estado")
 
 # clean wrong character in accent
 levels(vut$tipo) <- c("Habitaciones de uso turístico","Viviendas de uso turístico")
@@ -148,7 +152,7 @@ vut2$percent_tipo <- round( vut2$count / vut2$suma * 100, digits=1 )
 
 # ----- barras por unidad menor-------
 
-vut3 <- vut %>% 
+vut3 <- vut %>%
   group_by(umenores,tipo,estado) %>%
   summarise(count=n()) %>% 
   mutate(suma=sum(count)) %>%
@@ -261,7 +265,7 @@ dev.off()
 
 cbPalette <- c("#017c0a","#f4830f")
 
-png(filename=paste("images/vut-donostia/map-vut-tramitacion-donostia-",date_abr,".png",sep = ""),width = 1200,height = 900)
+png(filename=paste("images/vut-donostia/map-vut-tramitacion-donostia-",date_abr,"-barrios_zoom.png",sep = ""),width = 900,height = 600)
 ggplot() + 
   # mar y río
   geom_polygon(data=mar,aes(x=long, y=lat,group=group),fill="#f0f5fc",alpha=0.5) +
@@ -293,11 +297,11 @@ ggplot() +
   coord_quickmap(xlim=c(-2.02, -1.96), ylim=c(43.30,43.331)) + #zoom 
   guides(colour = guide_legend(override.aes = list(alpha = 0.9))) +
   labs(title = "Habitaciones y viviendas de uso turístico según estado de tramitación",
-     # subtitle = "Un total de xxx elementos. xxx viviendas (xxx en tramitación) y xxx habitaciones (xx en tramitación).",
-     subtitle =  paste("Donostia. ",date,".",sep=""),
+     subtitle = "Un total de 1.289 elementos. 1.163 viviendas (526 en tramitación) y 126 habitaciones (77 en tramitación).",
+     # subtitle =  paste("Donostia. ",date,".",sep=""),
      x = NULL,
      y = NULL,
-     caption = "Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb")
+     caption = paste("Donostia. ",date,".", " Datos: Ayuntamiento de Donostia. Gráfico: lab.montera34.com/airbnb",sep=""))
 dev.off()
 
 
