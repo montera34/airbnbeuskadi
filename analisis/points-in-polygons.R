@@ -13,15 +13,18 @@ library(rgdal)
 ## read files
 
 # shapes
-menores <- readOGR("data/output/limites/unidades-menores-donostia.geojson")
-barrios <- readOGR("data/output/limites/barrios-donostia.geojson")
+barrios <- readOGR("data/barrios-donostia_simplificado.geojson")
+menores <- readOGR("data/output/limites/unidades-menores-donostia_cleaned-merged.geojson")
 # class(menores) # checks that is patialPolygonsDataFrame
 # plot(menores) # plots the shape map
 # proj4string(menores) # check CRS
 
 # points
 # airbnb <- read.delim("data/original/180423_listings-airbnb-donostia_datahippo.csv",sep = ",")
-airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301.csv",sep = ",")
+# airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301.csv",sep = ",")
+# airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_WGS84.csv",sep = ",")
+# airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-20180914-wgs84.csv",sep = ",")
+airbnb <- read.delim("data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed.csv",sep = ",")
 
 ## Get long and lat from your data.frame. Make sure that the order is in lon/lat.
 # source: https://stackoverflow.com/questions/29736577/how-to-convert-data-frame-to-spatial-coordinates#29736844
@@ -46,9 +49,11 @@ countMenores <- over(airbnbSp, menores)
 airbnbSp$barrio <- countBarrios$BAR_DS_O
 airbnbSp$umenores <- countMenores$Unidad_men
 
-# Where are those points
+# Where are those points without barrio
 library(ggmap)
 qmplot(longitude, latitude, data = airbnb[is.na(airbnbSp$barrio =="no location"),], maptype = "toner-lite", 
+       color = I("red"),alpha = I(.2)) + labs(title= "Points without barrio" )
+qmplot(longitude, latitude, data = airbnb, maptype = "toner-lite", 
        color = I("red"),alpha = I(.2)) + labs(title= "Points without barrio" )
 
 airbnb <- as.data.frame(airbnbSp) # convert spatial data to regular data frame
@@ -73,4 +78,7 @@ length(airbnb[is.na(airbnbSp$barrio),]$name)
 
 # saves file
 # save(airbnb,file="data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.Rda")
-write.csv(airbnb, file = "data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv")
+# write.csv(airbnb, file = "data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.csv", row.names = FALSE)
+# write.csv(airbnb, file = "data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv", row.names = FALSE)
+# write.csv(airbnb, file = "data/output/vut-donostia/censo-viviendas-turisticas-donostia-20180914_barrio-umenor.csv", row.names = FALSE)
+write.csv(airbnb, file = "data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed_barrio-umenor.csv", row.names = FALSE)

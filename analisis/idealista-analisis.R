@@ -72,8 +72,8 @@ ggplot() +
         panel.background = element_rect(fill="white"),
         panel.grid.major.y = element_line( size=.1, color="grey" ),
         # legend.position = "bottom",
-        legend.text = element_text(size=15) ) +
-  geom_text(data = na.omit(idealista_barrio_mediano), aes(label=format(round(precio.mediano, 1), nsmall = 1, decimal.mark=','), x = yearf, y = precio.mediano), hjust=0.5, vjust=2)
+        legend.text = element_text(size=15) ) 
+  # geom_text(data = na.omit(idealista_barrio_mediano), aes(label=format(round(precio.mediano, 1), nsmall = 1, decimal.mark=','), x = yearf, y = precio.mediano), hjust=0.5, vjust=2)
 
 # Precios medios mensualidad
 ggplot() +
@@ -127,6 +127,8 @@ idealista_menor_medio_m2_matrix <-dcast(idealista_menor_medio_m2,menores ~ yearf
 idealista_barrio_medio_m2_matrix$dif13_17 <- idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3]
 # Porcentaje de cambio 2013-2017
 idealista_barrio_medio_m2_matrix$evol13_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,3])/idealista_barrio_medio_m2_matrix[,3],digits = 1)
+# Porcentaje de cambio 2016-2017
+idealista_barrio_medio_m2_matrix$evol16_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,6])/idealista_barrio_medio_m2_matrix[,6],digits = 1)
 # Porcentaje de cambio 2016-2017
 idealista_barrio_medio_m2_matrix$evol16_17 <- round(100*(idealista_barrio_medio_m2_matrix[,7] - idealista_barrio_medio_m2_matrix[,6])/idealista_barrio_medio_m2_matrix[,6],digits = 1)
 

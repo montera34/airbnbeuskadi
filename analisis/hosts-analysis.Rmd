@@ -282,7 +282,7 @@ theme(
 ) +
 labs(
   title=paste("Cada punto es un alojamiento del top 1 de anfitriones según alojamientos", sep = ""),
-  subtitle = paste(nrow(local_activo[host.id %in% n_alojamientos[1,]$host.id,]),
+  subtitle = paste(nrow(local_activo_f[host.id %in% n_alojamientos[1,]$host.id,]), #Revisar   
                    " alojamientos en ", local_activo_name,  sep = ""),
   caption = caption_2
   ) +
@@ -311,7 +311,7 @@ theme(
 ) +
 labs(
   title=paste("Cada punto es un alojamiento del top 2 de anfitriones según alojamientos", sep = ""),
-  subtitle = paste(nrow(local_activo[host.id %in% n_alojamientos[2,]$host.id,]),
+  subtitle = paste(nrow(local_activo_f[host.id %in% n_alojamientos[2,]$host.id,]),
                    " alojamientos en ", local_activo_name,  sep = ""),
   caption = caption_2
   ) +guides(colour = guide_legend(override.aes = list(size=3))) 

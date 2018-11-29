@@ -52,36 +52,62 @@ airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$time_active),]
 # mete orden en variable "order"
 airbnb2018_sep$order <- 1:nrow(airbnb2018_sep)
 
-airbnb2018 <- airbnb2018[order(airbnb2018$time_active),]
-# mete orden en variable "order"
-airbnb2018$order <- 1:nrow(airbnb2018)
+# airbnb2018 <- airbnb2018[order(airbnb2018$time_active),]
+# # mete orden en variable "order"
+# airbnb2018$order <- 1:nrow(airbnb2018)
 
 # mete datos de orden arriba calculados en las bases de datos anteriores
 airbnb2018 <- merge(airbnb2018, airbnb2018_sep[,c("url","order")], by.x="url", by.y="url")
 airbnb2018_jun <- merge(airbnb2018_jun, airbnb2018_sep[,c("url","order")], by.x="url", by.y="url")
 
 # Análisis de anuncios activos: desde cuándo fue encontrado hasta última vez que fue "revisado" 1 ----
-png(filename="images/airbnb/activos/found-to-revised-airbnb-donostia-comparacion_ordered-3m.png",width = 600,height = 1800)
+png(filename="images/airbnb/activos/found-to-revised-airbnb-donostia-comparacion_ordered-3_thin1.png",width = 800,height = 3800)
 ggplot() +
 geom_segment(data = airbnb2018_sep, aes(
   x= airbnb2018_sep$found_date,
   xend= airbnb2018_sep$revised_date,
   y= airbnb2018_sep$order,
   yend=airbnb2018_sep$order
-),size=1, alpha = 1, color = "#00AAFF") +
+),size=0.5, alpha = 1, color = "#00AAFF") +
 geom_segment(data = airbnb2018_jun, aes(
   x= airbnb2018_jun$found_date,
   xend= airbnb2018_jun$revised_date,
   y= airbnb2018_jun$order,
   yend=airbnb2018_jun$order
-),size=1, alpha = 1, color = "#FFAA44") +
+),size=0.5, alpha = 1, color = "#FFAA44") +
 geom_segment(data = airbnb2018, aes(
   x= airbnb2018$found_date,
   xend= airbnb2018$revised_date,
   y= airbnb2018$order,
   yend= airbnb2018$order
-),size=1, alpha = 1, color = "#FF77CC") +
+),size=0.5, alpha = 1, color = "#FF77CC") +
 theme_minimal(base_family = "Roboto", base_size = 10) +
+  theme(
+    # panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+    # axis.text.y = element_blank()
+  ) +
+  scale_x_date(limits = c(as.Date("2017-8-1"), as.Date("2018-10-1"))) +
+  labs(title = "de cuándo fueron encontrados a revisados",
+       subtitle = "Fechas de 'found' y 'revised' en Donostia. Orden por tiempo activos",
+       y = "id",
+       x = "fecha",
+       caption = "Efecto Airbnb. Datos: Septiembre 2018. Datahippo.org") 
+dev.off()
+
+# Análisis de anuncios activos: desde cuándo fue encontrado hasta última vez que fue "revisado" orden tipo listing ----
+airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$time_active,airbnb2018_sep$room_type),]
+
+png(filename="images/airbnb/activos/activos-airbnb-donostia-room_type-180926.png",width = 800,height = 3800)
+ggplot() +
+  geom_segment(data = airbnb2018_sep, aes(
+    x= airbnb2018_sep$found_date,
+    xend= airbnb2018_sep$revised_date,
+    y= order(airbnb2018_sep$time_active, airbnb2018_sep$room_type),
+    yend= order(airbnb2018_sep$time_active, airbnb2018_sep$room_type),
+    color = room_type
+  ),size=0.5, alpha = 1 ) +
+  theme_minimal(base_family = "Roboto", base_size = 10) +
   theme(
     # panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank()

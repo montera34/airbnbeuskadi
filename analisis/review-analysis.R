@@ -291,8 +291,8 @@ png(filename="images/airbnb/reviews/airbnb-reviews-puntos-donostia-2011-2017_1.p
 ggplot(reviews[reviews$listing_id %in% unique(listings$id),], aes(datex,factor(listing_id))) +
   theme_minimal(base_family = "Roboto", base_size = 12) +
   theme(
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
+    # panel.grid.major.x = element_blank(),
+    # panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.text.y = element_blank()
@@ -307,27 +307,29 @@ labs(title = "Reviews por fecha y número de id de alojamiento Airbnb. Donostia 
      subtitle = "Cada línea es un alojamiento.",
      x = "Fecha de review",
      y = "id de alojamiento",
-     caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb") 
+     caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")  #minor_breaks = "3 month", 
 dev.off()
 
 # ------ Acumulation of reviews: date vs listing_id. Smaller darker points. Full period analyzed ------
 #  Seen gaps in the listings, if listings is not factorized you'll see gaps related to difference in number of listing id
 png(filename="images/airbnb/reviews/airbnb-reviews-puntos-donostia-2011-2017_2.png",width = 900,height = 600)
 ggplot() +
-  theme_minimal(base_family = "Roboto", base_size = 12) +
+  theme_minimal(base_family = "Roboto", base_size = 13) +
   theme(
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.minor.y = element_blank(),
+    # panel.grid.major.x = element_blank(),
+    # panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.text.y = element_blank()
   ) +
-  geom_point(data=reviews[reviews$listing_id %in% unique(listings$id),],aes(datex,listing_id), alpha=1,size=0.0001) +
+  geom_point(data=reviews[reviews$listing_id %in% unique(listings$id),],aes(datex,factor(listing_id)), alpha=1,size=0.0001) +
   labs(title = "Reviews por fecha y número de id de alojamiento Airbnb. Donostia 2011-2017 (abril)",
        subtitle = "Cada línea es un alojamiento.",
        x = "Fecha de review",
        y = "id de alojamiento",
-       caption = "Efecto Airbnb. lab.montera34.com Datos: InsideAirbnb")
+       caption = "Efecto Airbnb. lab.montera34.com Datos: InsideAirbnb") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%m.%Y")  #minor_breaks = "3 month", 
 dev.off()
 # ------ Acumulation of reviews: date vs listing_id. Smaller darker points. Full period analyzed ------
 # Factorized listings avoids the gaps due to difference in listings id number
@@ -345,74 +347,52 @@ ggplot() +
        subtitle = "Every line is one listing. Look at the line gaps: listings without reviews.",
        x = "Review date",
        y = "listing id",
-       caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb")
-# ------ Acumulation of reviews: date vs listing_id. Date with day. Nice grid. Smaller darker points. Full period analyzed ------
-ggplot() +
-  theme_minimal(base_family = "Roboto", base_size = 10) +
-  theme(
-    # panel.grid.major.x = element_blank(),
-    # panel.grid.minor.x = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    axis.text.y=element_blank()
-  ) +
-  # ylab(c(0,17000))+
-  # geom_point(data=reviews[sample(nrow(reviews), 12000), ],aes(datex,factor(listing_id)), alpha=0.15,size=0.00005) +
-  geom_point(data=reviews,aes(datex,factor(listing_id)), alpha=1,size=0.00005) +
-  labs(title = "Reviews per date and listing. Madrid 2010-2018 (January)",
-       subtitle = "Every line is one listing. Look at the line gaps: listings with less reviews.",
-       x = "Review date",
-       y = "listing id",
        caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb") +
-  scale_x_date(date_breaks = "1 year", date_labels = "%m.%y", limits = c(as.Date("2010-03-01"),NA)) + #minor_breaks = "3 month", 
-  geom_hline(yintercept = seq(0,20000,by=5000),colour = "#999999",size=0.5,alpha=0.1)
-
-# scale_y_continuous(breaks = c(2000, 4000, 6000)) +
-# scale_fill_manual(name = "Values", values=setNames(colors, 1:8))
-
-length(unique(reviews3$listing_id))
-length(unique(reviews2$listing_id))
-length(unique(reviews$listing_id))
-
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")
 
 # ------ Number of reviews per month. Histogram. Full period --------
 # ggplot(reviews[ reviews$year==2015,], aes(datex, ..count..)) +
 # Donostia
+png(filename="images/airbnb/reviews/airbnb-reviews-mes-2011-2017.png",width = 900,height = 600)
 ggplot(reviews, aes(datex, ..count..)) +
-  theme_minimal(base_family = "Roboto Condensed", base_size = 10) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
   theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    axis.ticks.x= element_line(size = 0.1),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    axis.text.y=element_blank()
+    axis.ticks.x= element_line(size = 0.1)
+    # panel.grid.minor.y = element_blank()
+    # panel.grid.major.y = element_blank(),
+    # axis.text.y=element_blank()
   ) +
   geom_histogram(binwidth = 30.41, colour="white") + #  bins = 72
-  labs(title = "'Reviews' de Airbnb por mes en Donostia",
-       subtitle = "Archivos de reviews InsideAirbnb",
+  labs(title = "Reviews de Airbnb por mes en Donostia",
+       subtitle = "2011-2017 (abril)",
        x = "Año",
        y = "Número de reviews por mes",
-       caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb")
+       caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")
+dev.off()
 
 # Faceted
+png(filename="images/airbnb/reviews/airbnb-reviews-mes-2011-2017_faceted.png",width = 900,height = 600)
 ggplot(reviews, aes(month)) +
   theme_minimal(base_family = "Roboto Condensed", base_size = 10) +
   theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    axis.ticks.x= element_line(size = 0.1),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    axis.text.y=element_blank()
+    axis.ticks.x= element_line(size = 0.1)
+    # panel.grid.minor.y = element_blank()
+    # panel.grid.major.y = element_blank(),
+    # axis.text.y=element_blank()
   ) +
   geom_bar() + #  bins = 72
   labs(title = "'Reviews' de Airbnb por mes en Donostia",
-       subtitle = "Archivos de reviews InsideAirbnb",
+       subtitle = "2011-2017",
        x = "Año",
        y = "Número de reviews por mes",
-       caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb")+
+       caption = "Efecto Airbnb. lab.montera34.com. Data: InsideAirbnb")+
   facet_wrap(~ year)
+dev.off()
 
 # Madrid
 ggplot(reviews[!reviews$year==2010 & !reviews$year==2011 & !reviews$year==2018,], aes(datex, ..count..)) +
@@ -477,22 +457,33 @@ listings_top <- listings[listings$host_id==15707672 |listings$host_id==98419892 
 
 # Use this if do not know which listings to select
 # listings_top <- listings[1:100,]
-
+png(filename="images/airbnb/reviews/airbnb-reviews-mes-top4-marcado-2011-2017.png",width = 900,height = 600)
 ggplot() +
-  theme_minimal(base_family = "Roboto", base_size = 10) +
+  theme_minimal(base_family = "Roboto", base_size = 16) +
   theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.text.y=element_blank()
   ) +
-  geom_point(data=reviews[reviews$listing_id %in% unique(listings$id),],aes(datex,factor(listing_id)), alpha=0.3,size=0.0001) +
-  geom_point(data=reviews[reviews$listing_id %in% listings_top,],aes(datex,factor(listing_id)), alpha=1,size=0.005,color="#FF0000") +
-  labs(title = "Reviews per date and listing. Donostia 2011-2017 (abril)",
-       subtitle = "Every line is one listing. In red: the top 4 hosts (users with more listings) manage 155 ads.",
-       x = "Review date",
-       y = "listing id",
-       caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb") 
+  geom_point(data=reviews[reviews$listing_id %in% unique(listings$id),],aes(datex,factor(listing_id)), 
+             alpha=1,size=0.0001) +
+  geom_point(data=reviews[reviews$listing_id %in% listings_top,],aes(datex,factor(listing_id)),
+             alpha=1,size=0.4,color="#FF0000") +
+  labs(title = "Reviews de Airbnb por mes en Donostia 2011-2017 (abril)",
+     subtitle = "Cada línea es un listing. En rojo los top 4 anfitriones que gestionan 164 alojamientos.",
+     x = "Año",
+     y = "id de alojamiento",
+     caption = "Efecto Airbnb. lab.montera34.com Data: InsideAirbnb") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  geom_hline(yintercept = seq(0,1300,by=100),colour = "#999999",size=0.5,alpha=0.1) +
+  geom_text(aes(x = as.Date("2012-01-01"), y = 510, label = "500"), color = "#999999", size=3) +
+  geom_text(aes(x = as.Date("2012-01-01"), y = 1010, label = "1.000"), color = "#999999", size=3)
+  # geom_text(aes(x = as.Date("2012-01-01"), y = 16000, label = "15.000"), color = "#999999", size=3) +
+  # geom_text(aes(x = as.Date("2012-01-01"), y = 21000, label = "20.000"), color = "#999999", size=3) +
+  # geom_text(aes(x = as.Date("2012-01-01"), y = 26000, label = "25.000"), color = "#999999", size=3) 
+dev.off()
 
 # ------ Acumulation of reviews: date vs listing_id.Select per date -------------
 ggplot() +

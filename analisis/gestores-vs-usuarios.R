@@ -6,9 +6,56 @@ library(tidyverse)
 location <- "Donostia"
 
 # Load reviews and listings
-listings  <- read.delim("data/listings_donostia_simple.csv",sep = ",")
+# listings  <- read.delim("data/listings_donostia_simple.csv",sep = ",")
+listings2017 <- read.delim("data/output/170400_listings-airbnb-donostia_insideairbnb-datahippo_barrio-umenor.csv",sep = ",")
+listings2018  <- read.delim("data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.csv",sep = ",")
 
-superuser <- listings %>% summarise(host_id)
+superuser2017 <- listings2017 %>% group_by(host_id)  %>% summarise(count_listings=n())  %>% arrange(desc(count_listings))
+superuser2018 <- listings2018 %>% group_by(host.id)  %>% summarise(count_listings=n())  %>% arrange(desc(count_listings))
+
+png(filename="images/airbnb/superuser/airbnb-antfitriones-2017.png",width = 550,height = 600)
+ggplot(superuser2017[1:30,],aes(x=reorder(as.character(host_id),count_listings),y=count_listings)) +
+  geom_bar(stat="identity") +
+  ylim(0, 150) +
+  coord_cartesian(ylim = c(0, 130)) +
+  coord_flip() +
+  theme_minimal(base_family = "Roboto", base_size = 15) +
+  # ylab(c(0,120)) +
+  theme(
+    # panel.grid.minor.x = element_blank(), 
+    panel.grid.minor.y = element_blank(),
+    # panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.title=element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  labs(title = "Usuarios con más anuncios. Donostia - San Sebastián. 2017",
+       subtitle = "",
+       y = "anuncios",
+       x = "anfitriones",
+       caption = "Efecto Airbnb. lab.montera34.com. Data: InsideAirbnb")
+dev.off()
+
+png(filename="images/airbnb/superuser/airbnb-antfitriones-2018.png",width = 550,height = 600)
+ggplot(superuser2018[1:30,],aes(x=reorder(as.character(host.id),count_listings),y=count_listings)) +
+  geom_bar(stat="identity") +
+  ylim(0, 150) +
+  coord_flip() +
+  theme_minimal(base_family = "Roboto", base_size = 15) +
+    theme(
+      # panel.grid.minor.x = element_blank(), 
+      panel.grid.minor.y = element_blank(),
+      # panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_blank(),
+      legend.title=element_blank(),
+      axis.text.y = element_blank()
+    ) +
+  labs(title = "Usuarios con más anuncios. Donostia - San Sebastián. 2018",
+       subtitle = "",
+       y = "anuncios",
+       x = "anfitriones",
+       caption = "Efecto Airbnb. lab.montera34.com. Data: InsideAirbnb")
+dev.off()
 
 # Create date field for first and last review
 listings$first_reviewx <- as.Date(listings$first_review, "%Y-%m-%d")
@@ -82,17 +129,37 @@ ggplot(listings) +
 dev.off()
 
 tipo_user <- listings %>% group_by(type_of_host) %>% summarise(alojamientos=n())
-png(filename="images/airbnb/superuser/barras-airbnb-tipo-usuario-mínimo-numero-noches-medias-2017.png",width = 800,height = 600)
-ggplot(min_night,aes(x=type_of_host,y=media)) +
+png(filename="images/airbnb/superuser/barras-airbnb-tipo-usuario-numero-alojamientos-noches-medias-2017.png",width = 800,height = 600)
+ggplot(tipo_user,aes(x=type_of_host,y=alojamientos)) +
   geom_bar(stat="identity") +
   coord_flip()+
   theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
   theme(
     panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
   ) + 
-  labs(title = "Mínimo número de noches según tipo de propietario",
+  labs(title = "Propiedad de pisos según su tipo de propietario",
        subtitle = "Airbnb en Donostia.",
-       y = "nº mínimo de noches",
+       y = "alojamientos",
+       x = "tipo de host",
+       caption = "Datos: Insideairbnb (marzo 2017). Gráfico: lab.montera34.com/airbnb")
+dev.off()
+
+tipo_user_2 <- listings %>% group_by(type_of_host,room_type) %>% summarise(alojamientos=n())
+
+ggplot(n,aes(x = reorder(barrios, -pos_ratio2018), y = Value)) +
+  geom_bar(aes(fill = Year), position = "dodge", stat="identity")+
+
+png(filename="images/airbnb/superuser/barras-airbnb-tipo-usuario-tipo_room_numero-alojamientos-noches-medias-2017.png",width = 800,height = 600)
+ggplot(tipo_user_2,aes(x=type_of_host,y=alojamientos)) +
+  geom_bar(aes(fill = room_type), position = "dodge",stat="identity") +
+  coord_flip()+
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank()
+  ) + 
+  labs(title = "Propiedad de pisos según su tipo de propietario",
+       subtitle = "Airbnb en Donostia.",
+       y = "alojamientos",
        x = "tipo de host",
        caption = "Datos: Insideairbnb (marzo 2017). Gráfico: lab.montera34.com/airbnb")
 dev.off()
