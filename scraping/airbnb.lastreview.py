@@ -179,4 +179,3 @@ with open(outputpathrev, "w") as outfile:
 end = time.time()
 print("Scraping duration in seconds:")
 print(end - start)
-
