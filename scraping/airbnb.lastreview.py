@@ -5,8 +5,8 @@ import time
 from datetime import datetime
 import re
  
-inputfilename = "180604_listings-airbnb-donostia_datahippo.csv" # nombre del archivo con los ids de los listings, uno por linea
-inputpath = "../data/original/"+inputfilename # nombre del archivo con los ids de los listings, uno por linea
+inputfilename = "listings-airbnb_donostia_datahippo.csv" # nombre del archivo con los ids de los listings, uno por linea
+inputpath = "../data/original/donostia/datahippo/180926/"+inputfilename # nombre del archivo con los ids de los listings, uno por linea
 today = datetime.now().date().strftime("%Y%m%d")
 outputfilename = inputfilename.replace(".csv","")+"_with-last-review-"+today+".csv"
 outputpath = "../data/output/"+outputfilename
@@ -17,6 +17,9 @@ hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML,
        'Accept-Encoding': 'none',
        'Accept-Language': 'en-US,en;q=0.8', #cambia idioma 'Accept-Language': 'es-ES,es;q=0.8' 	
        'Connection': 'keep-alive'}
+
+## measure scraping duration
+start = time.time()
 
 ## scraping
 count=0
@@ -30,7 +33,7 @@ with open(outputpath, "w") as outfile:
 
             # uncomment the following two lines
             # to debug with first 5 rows of input file
-            #if count == 5:
+            # if count == 5:
             #    break
 
             count +=1
@@ -52,7 +55,7 @@ with open(outputpath, "w") as outfile:
                     soup = BeautifulSoup(html, "html.parser")
 
                     try:
-                        nreviewsRaw = soup.select("#reviews ._1xu9tpch")[0].get_text().encode('utf-8').strip()
+                        nreviewsRaw = soup.select("#reviews ._fecoyn4")[0].get_text().encode('utf-8').strip()
                         nreviewsArray = re.match('\d{1,}',nreviewsRaw)
                         nreviews = nreviewsArray.group()
                         #nreviews = nreviews.translate(None, ' Reviews').encode('utf-8').strip()
@@ -105,8 +108,8 @@ with open(outputpathrev, "w") as outfile:
 
             # uncomment the following two lines
             # to debug with first 5 rows of input file
-            #if count == 5:
-            #    break
+            # if count == 5:
+            #     break
 
             count +=1
 
@@ -130,7 +133,7 @@ with open(outputpathrev, "w") as outfile:
                         soup = BeautifulSoup(html, "html.parser")
     
                         try:
-                            nreviewsRaw = soup.select("#reviews ._1xu9tpch")[0].get_text().encode('utf-8').strip()
+                            nreviewsRaw = soup.select("#reviews ._fecoyn4")[0].get_text().encode('utf-8').strip()
                             nreviewsArray = re.match('\d{1,}',nreviewsRaw)
                             nreviews = nreviewsArray.group()
                             #nreviews = nreviews.translate(None, ' Reviews').encode('utf-8').strip()
@@ -171,4 +174,9 @@ with open(outputpathrev, "w") as outfile:
     
             writer.writerow([row['id'],url,row['longitude'],row['latitude'],row['found'],row['revised'],row['host-id'],row['room_type'],row['bedrooms'],row['capacity'],row['reviews'],row['min_nights'],row['price'],nreviews,lastreview,exists])
             print "Data saved."
-    
+
+## measure scraping duration
+end = time.time()
+print("Scraping duration in seconds:")
+print(end - start)
+
