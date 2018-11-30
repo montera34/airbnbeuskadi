@@ -20,9 +20,12 @@ airbnb2018_jun <- read.delim("data/original/180604_listings-airbnb-donostia_data
 levels(airbnb2018_jun$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
 airbnb2018_sep <- read.delim("data/output/listings-airbnb_donostia_datahippo_with-last-review-20181127-reviewed.csv",sep = ",")
-levels(airbnb2018_sep$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 airbnb2018_sep$exists_20181127 <- as.factor(airbnb2018_sep$exists_20181127)
 levels(airbnb2018_sep$exists_20181127) <- c("No existe","Existe")
+# airbnb2018_sep <- read.delim("data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed.csv",sep = ",")
+# airbnb2018_sep$exists_20180912 <- as.factor(airbnb2018_sep$exists_20180912)
+# levels(airbnb2018_sep$exists_20180912) <- c("No existe","Existe")
+levels(airbnb2018_sep$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
 # ----- Anuncios activos parse dates-----
 # airbnb2018$found_year <- as.numeric(strapplyc( as.character(airbnb2018$found), "([0-9]*).*", simplify = TRUE))
@@ -40,12 +43,19 @@ airbnb2018_jun$revised_date <- as.Date(as.POSIXct(airbnb2018_jun$revised))
 
 airbnb2018_sep$found_date <- as.Date(as.POSIXct(airbnb2018_sep$found))
 airbnb2018_sep$revised_date <- as.Date(as.POSIXct(airbnb2018_sep$revised))
+# airbnb2018_sep$lastreview_date  <- as.Date( paste(
+#   as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20181127), "[0-9]*-[0-9]*-([0-9]*).*", simplify = TRUE)),
+#   "/",
+#   as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20181127), "[0-9]*-([0-9]*).*", simplify = TRUE)),
+#   "/",
+#   as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20181127), "([0-9]*).*", simplify = TRUE)),
+#   sep = "" ), "%d/%m/%Y")
 airbnb2018_sep$lastreview_date  <- as.Date( paste(
-  as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20181127), "[0-9]*-[0-9]*-([0-9]*).*", simplify = TRUE)),
+  as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20180912), "[0-9]*-[0-9]*-([0-9]*).*", simplify = TRUE)),
   "/",
-  as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20181127), "[0-9]*-([0-9]*).*", simplify = TRUE)),
+  as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20180912), "[0-9]*-([0-9]*).*", simplify = TRUE)),
   "/",
-  as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20181127), "([0-9]*).*", simplify = TRUE)),
+  as.numeric(strapplyc( as.character(airbnb2018_sep$lastreview_20180912), "([0-9]*).*", simplify = TRUE)),
   sep = "" ), "%d/%m/%Y")
 
 # Calculate time active 1 ----
@@ -61,26 +71,33 @@ airbnb2018_sep$review_in_2018 <- as.factor(airbnb2018_sep$review_in_2018)
 # to calculate aa new "active time" line end
 airbnb2018_sep$max.date <- as.Date(apply(airbnb2018_sep[,c("revised_date","lastreview_date")],1,max))
 airbnb2018_sep[is.na(airbnb2018_sep$max.date),]$max.date <- airbnb2018_sep[is.na(airbnb2018_sep$max.date),]$revised_date
-nrow(airbnb2018_sep[airbnb2018_sep$max.date > "2018-07-31",])
-nrow(airbnb2018_sep[airbnb2018_sep$revised_date > "2018-07-31",])
+# nrow(airbnb2018_sep[airbnb2018_sep$max.date > "2018-07-31",])
+# nrow(airbnb2018_sep[airbnb2018_sep$revised_date > "2018-07-31",])
 airbnb2018_sep$time_active2 <- airbnb2018_sep$max.date  - airbnb2018_sep$found_date
 
-# Ordena listings por tiempo activo ----
+
+# Order listings ---------
+# Ordena listings por tiempo activo
 airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$time_active),]
 # mete orden en variable "order"
 airbnb2018_sep$order <- 1:nrow(airbnb2018_sep)
 
-# Ordena listings por tiempo activo 2 ----
+# Ordena listings por tiempo activo 2
 airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$time_active2),]
 # mete orden en variable "order"
 airbnb2018_sep$order <- 1:nrow(airbnb2018_sep)
 
-# Ordena listings por número reviews ----
+# Ordena listings por max.date
+airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$max.date),]
+# mete orden en variable "order"
+airbnb2018_sep$order <- nrow(airbnb2018_sep):1
+
+# Ordena listings por número reviews
 airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$reviews),]
 # mete orden en variable "order"
 airbnb2018_sep$order <- 1:nrow(airbnb2018_sep)
 
-# Ordena listings por si existe URL o no ----
+# Ordena listings por si existe URL o no
 airbnb2018_sep <- airbnb2018_sep[order(airbnb2018_sep$exists_20181127),]
 # mete orden en variable "order"
 airbnb2018_sep$order <- 1:nrow(airbnb2018_sep)
@@ -93,16 +110,38 @@ airbnb2018_sep$order <- 1:nrow(airbnb2018_sep)
 airbnb2018 <- merge(airbnb2018, airbnb2018_sep[,c("url","order")], by.x="url", by.y="url")
 airbnb2018_jun <- merge(airbnb2018_jun, airbnb2018_sep[,c("url","order")], by.x="url", by.y="url")
 
+# Calculate active listings in a given month -----
+# Date of last datahippo scraping: 2018-09-26. September 2018
+date_selected <- as.Date("2018-07-31") #select date
+# format(date_selected,"%m")
+# counts number of listings considered "active" for September
+nrow(airbnb2018_sep[airbnb2018_sep$max.date > date_selected,]) 
+---------------------------------------------------------------------------
+
 # Análisis de anuncios activos: desde cuándo fue encontrado hasta última vez que fue "revisado" 1 ----
-png(filename="images/airbnb/activos/activos-airbnb-donostia-exists-colored_timeline-until-max-date_reordered.png",width = 800,height = 3800)
+png(filename="images/airbnb/activos/activos-airbnb-donostia-revised-to-last-review_2.png",width = 800,height = 3800)
 ggplot() +
-geom_segment(data = airbnb2018_sep, aes(
-  x= airbnb2018_sep$found_date,
-  xend= airbnb2018_sep$max.date,
-  y= airbnb2018_sep$order,
-  yend=airbnb2018_sep$order,
-  color = exists_20181127
-),size=0.5, alpha = 1) +
+  geom_segment(data = airbnb2018_sep, aes(
+    x= airbnb2018_sep$found_date,
+    xend= airbnb2018_sep$max.date,
+    y= airbnb2018_sep$order,
+    yend=airbnb2018_sep$order
+  ),
+  size=0.5, alpha = 1,color = "#BBFFEE") +
+  geom_segment(data = airbnb2018_sep, aes(
+    x= airbnb2018_sep$revised_date,
+    xend= airbnb2018_sep$lastreview_date,
+    y= airbnb2018_sep$order,
+    yend=airbnb2018_sep$order
+    ),
+    color = "#74bbde",
+    arrow = arrow(length = unit(0.1,"cm")),
+    size=0.5, alpha = 1) +
+geom_point(data = airbnb2018_sep, aes(
+    x=airbnb2018_sep$revised_date,
+    y=airbnb2018_sep$order),
+    size=0.2
+    ) +
 # geom_segment(data = airbnb2018_jun, aes(
 #   x= airbnb2018_jun$found_date,
 #   xend= airbnb2018_jun$revised_date,
@@ -121,16 +160,16 @@ theme_minimal(base_family = "Roboto", base_size = 10) +
     panel.grid.minor.y = element_blank()
     # axis.text.y = element_blank()
   ) +
-  scale_x_date(limits = c(as.Date("2017-8-1"), as.Date("2018-11-1"))) +
-  labs(title = "De cuándo fueron encontrados a revisados",
-       subtitle = "Fechas de 'found' y 'revised' en Donostia. Orden por tiempo activos. Color existe - no existe la URL",
-       y = "id",
+  scale_x_date(date_minor_breaks = "1 month",limits = c(as.Date("2017-8-1"), as.Date("2018-11-1"))) +
+  ylim(0,nrow(airbnb2018_sep)) +
+  labs(title = "From revised (2018-09-26) to last review (scraping 2018-11-27)",
+       subtitle = "Donostia. Orden por tiempo activos.",
+       y = "",
        x = "fecha",
        caption = "Efecto Airbnb. Datos: Septiembre 2018. Datahippo.org") 
 dev.off()
 
 # Anuncios que tienen fecha de revised de septiembre 2017 pero que su URL sigue viva ------
-
 airbnb2018_sep[airbnb2018_sep$revised_date < "2017-10-01" & airbnb2018_sep$exists_20181127 == "Existe" & 
                  ( airbnb2018_sep$lastreview_date > "2018-01-01" & !is.na(airbnb2018_sep$lastreview_date)),]
 
