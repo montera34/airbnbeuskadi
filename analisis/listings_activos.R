@@ -1,7 +1,8 @@
-# Análisis de Airbnb en Donostia: anuncios activos
+# Análisis de Airbnb en Donostia: anuncios activos en base a datos de datahippo.org y scraping para last review
+# Incluye generación de visualizaciones para ver y calcular el número de anuncios activos
 
-# ---- Load libraries -----
-library(tidyverse)
+# # ---- Load libraries -----
+# library(tidyverse)
 # read shapes
 library(rgdal)
 library(ggmap) #for theme nothing
@@ -116,7 +117,7 @@ date_selected <- as.Date("2018-07-31") #select date
 # format(date_selected,"%m")
 # counts number of listings considered "active" for September
 nrow(airbnb2018_sep[airbnb2018_sep$max.date > date_selected,]) 
----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 # Análisis de anuncios activos: desde cuándo fue encontrado hasta última vez que fue "revisado" 1 ----
 png(filename="images/airbnb/activos/activos-airbnb-donostia-revised-to-last-review_2.png",width = 800,height = 3800)
