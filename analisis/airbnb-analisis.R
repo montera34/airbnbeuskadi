@@ -46,6 +46,8 @@ airbnb201806 <- read.delim("data/output/180604_listings-airbnb-donostia_datahipp
 # Translate room type
 levels(airbnb201806$room_type) <- c("Vivienda completa","Habitación privada","Habitación compartida")
 
+# Airbnb listings 2018-09
+airbnb <- read.delim("data/output/180926_listings-airbnb-donostia_datahippo_with-last-review-20181127-reviewed_active-filtered_barrio-umenor.csv",sep = ",")
 
 # ----- Prepares data -------
 
@@ -63,7 +65,8 @@ table(airbnb201806$room_type)
 # Compare two data sets by number of room types----
 # compare_room <- merge(data.frame(table(airbnb2018$room_type)),data.frame(table(airbnb2017merged$room_type)),by="Var1")
 # compare_room <- merge(compare_room,data.frame(table(airbnb2017$room_type)),by="Var1")
-compare_room <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb2018$room_type)),by="Var1")
+# compare_room <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb2018$room_type)),by="Var1")
+compare_room <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb$room_type)),by="Var1")
 colnames(compare_room) <- c("tipo_habitacion","2017","2018")
 
 # reshape data to long format to prepare to plot bar chart year comparison
@@ -97,13 +100,15 @@ png(filename="images/airbnb/hab-viv-barras-airbnb-donostia-2017-2018.png",width 
 dev.off()
 
 # Compare 3 data sets by number of room types----
-compare_room3 <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb2018$room_type)),by="Var1")
-compare_room3 <- merge(compare_room3,data.frame(table(airbnb201806$room_type)))
-colnames(compare_room3) <- c("tipo_habitacion","2017","2018","2019")
+# compare_room3 <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb2018$room_type)),by="Var1")
+compare_room3 <- merge(data.frame(table(airbnb2017merged$room_type)),data.frame(table(airbnb$room_type)),by="Var1")
+# compare_room3 <- merge(compare_room3,data.frame(table(airbnb201806$room_type)))
+# colnames(compare_room3) <- c("tipo_habitacion","2017","2018","2019")
+colnames(compare_room3) <- c("tipo_habitacion","2017","2018")
 
 # reshape data to long format to prepare to plot bar chart year comparison
-m3 <- reshape(compare_room3, direction = "long", varying = list(names(compare_room3)[2:4]), v.names = "Value", 
-             idvar = c("tipo_habitacion"), timevar = "Year", times = 2017:2019)
+m3 <- reshape(compare_room3, direction = "long", varying = list(names(compare_room3)[2:3]), v.names = "Value", 
+             idvar = c("tipo_habitacion"), timevar = "Year", times = 2017:2018)
 
 # renames years t oinclude month
 m3[m3$Year==2018,]$Year <- "04/2018"
@@ -478,7 +483,9 @@ dev.off()
 # ----- Prepara datos por barrios -------
 airbnb_barrio <- data.frame(table(airbnb2017merged$barrio))
 names(airbnb_barrio) <- c("barrio","airbnb_2017")
-airbnb_barrio2 <- data.frame(table(airbnb2018$barrio))
+# airbnb_barrio2 <- data.frame(table(airbnb2018$barrio))
+# names(airbnb_barrio2) <- c("barrio","airbnb_2018")
+airbnb_barrio2 <- data.frame(table(airbnb$barrio))
 names(airbnb_barrio2) <- c("barrio","airbnb_2018")
 
 # Merge data in single data frame
@@ -493,15 +500,40 @@ por_barrios$ratio2018 <- round(por_barrios$airbnb_2018 / por_barrios$Total.Vivie
 por_barrios$pos_airbnb_2018 <- 1
 por_barrios[ order(-por_barrios[,6]), ]$pos_airbnb_2018 <- 1:17
 por_barrios$pos_ratio2018 <- 1
-por_barrios[ order(-por_barrios[,8]), ]$pos_ratio2018 <- 1:17
+por_barrios[ order(-por_barrios[,"ratio2018"]), ]$pos_ratio2018 <- 1:17
 
 # ----- Cantidad Airbnb por barrios: barras -------
+# reshape into long format
+p1 <- por_barrios[,c("barrios","airbnb_2018","pos_ratio2018")]
+
+# Plots in bars for 1 year
+png(filename="images/airbnb/n-anuncios-airbnb-barrios-donostia-201809.png",width = 450,height = 750)
+ggplot(p1,aes(x = reorder(barrios, airbnb_2018), y = airbnb_2018)) + #order by Value or by -pos_ratio2018
+  geom_col(position = "dodge")+
+  # scale_y_continuous(limits = c(0,850), expand = c(0,0)) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position = "bottom"
+  ) +
+  labs(title = "Presencia de Airbnb en barrios. Donostia",
+       subtitle = "Cantidad de anuncios activos de Airbnb en Donostia. Septiembre 2018",
+       y = "nº anuncios Airbnb",
+       x = NULL,
+       caption = "Datos: Datahippo.org. Gráfico: lab.montera34.com/airbnb") +
+  geom_text(aes(label =airbnb_2018),
+            position = position_dodge(width = 1), hjust = -0.1,
+            size=3,color="#777777") +
+  coord_flip()
+dev.off()
+
+# Plots in bars for 2 years
 # reshape into long format
 p <- reshape(por_barrios[,-c(2:4,7,8)], direction = "long", varying = list(names(por_barrios[,-c(2:4,7)])[2:3]), v.names = "Value", 
              idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
 # creates factor for year
 p$Year <- as.factor(p$Year)
-# Plots in bars
+
 png(filename="images/airbnb/n-anuncios-airbnb-barrios-donostia-2017-2018_order_value.png",width = 450,height = 750)
 ggplot(p,aes(x = reorder(barrios, Value), y = Value, fill=Year)) + #order by Value or by -pos_ratio2018
   geom_col(aes(fill = Year), position = "dodge")+
@@ -522,6 +554,33 @@ ggplot(p,aes(x = reorder(barrios, Value), y = Value, fill=Year)) + #order by Val
     coord_flip()
 dev.off()
 
+# ----- Ratio Airbnb por barrios: barras -------
+# 1 years
+# reshape into long format
+n1 <- por_barrios[,c("barrios","ratio2018")]
+
+# Plots in bars
+png(filename="images/airbnb/ratio-airbnb-barrios-donostia-201809.png",width = 450,height = 700)
+ggplot(n1,aes(x = reorder(barrios, ratio2018), y = ratio2018)) + #order by Value or by -pos_ratio2018
+  geom_col(position = "dodge") +
+  # scale_y_continuous(limits = c(0,8.5), expand = c(0,0)) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 14) +
+  theme(
+    panel.grid.minor.y = element_blank(), panel.grid.major.y = element_blank(),
+    legend.position = "bottom"
+  ) + 
+  labs(title = "Presencia de Airbnb en barrios: 2017 y 2018",
+       subtitle = "Ratio de anuncios de Airbnb por cada 100 viviendas en Donostia",
+       y = "ratio anuncios Airbnb / 100 viviendas",
+       x = NULL,
+       caption = "Datos: datahippo.org (septiembre 2018). Gráfico: lab.montera34.com/airbnb") +
+  geom_text(aes(label = ratio2018),
+            position = position_dodge(width = 1), hjust = -0.1,
+            size=3,color="#777777") +
+  coord_flip()
+dev.off()
+
+# 2 years
 # reshape into long format
 n <- reshape(por_barrios[,-c(2:6)], direction = "long", varying = list(names(por_barrios[,-c(2:6)])[2:3]), v.names = "Value", 
              idvar = c("barrios"), timevar = "Year", times = c(2017:2018))
@@ -549,7 +608,64 @@ ggplot(n,aes(x = reorder(barrios, Value), y = Value, fill=Year)) + #order by Val
   coord_flip()
 dev.off()
 
-# -------- Gráfico mariposa anuncios --------
+
+# -------- Gráfico mariposa ratio anuncios airbnb 1 year--------
+# inspired/copied from https://github.com/meneos/R_Dataviz/blob/master/RENTABILIDAD%20INMUEBLES%20MADRID/rentabilidad_distritos.R
+# library(gridExtra)
+plot1 <- ggplot(n1,aes(x = reorder(barrios, ratio2018), y = ratio2018)) + #order by Value or by -pos_ratio2018
+  geom_col(position = "dodge")+
+  scale_y_continuous(limits = c(0,4.5), expand = c(0,0)) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
+  theme(axis.title.x = element_text(margin = margin(20,0,0,0)),
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.2),
+        plot.caption = element_text(margin = margin(20,0,0,0)), 
+        axis.text.y = element_text(hjust = 0.5),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank(),
+        legend.position="bottom") +
+  labs(title = "",
+       subtitle = "Anuncios de Airbnb por cada 100 viviendas",
+       y = "ratio anuncios Airbnb / 100 viviendas",
+       x = NULL,
+       caption = "Datos: Datahippo (septiembre 2018). Gráfico: lab.montera34.com/airbnb") +
+  geom_text(aes(label = ratio2018),
+            position = position_dodge(width = 1), hjust = -0.1,
+            size=4,color="#777777") +
+  coord_flip()
+
+plot2 <-ggplot(p1,aes(x = reorder(barrios, -pos_ratio2018), y = airbnb_2018)) + #order by Value or by -pos_ratio2018
+  geom_col(position = "dodge")+
+  scale_y_continuous(limits = c(0,850), expand = c(0,0)) +
+  theme_minimal(base_family = "Roboto Condensed", base_size = 16) +
+  theme(
+    axis.title.x = element_text(margin = margin(20,0,0,0)),
+    plot.title = element_text(face = "bold", hjust = 0),
+    plot.subtitle = element_text(hjust = 0.2),
+    plot.caption = element_text(margin = margin(20,0,0,0)), 
+    axis.text.y = element_text(hjust = 0.5),
+    axis.text.y = element_blank(), #uncomment to plot the names of barrios
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position="bottom",
+    plot.margin = unit(c(0.3,0,0.4,4), "cm")
+  ) +
+  scale_y_reverse() + #invert axis
+  labs(title = "Presencia de Airbnb en barrios de Donostia por nº de anuncios",
+       subtitle = "Número de anuncios de Airbnb",
+       y = "nº anuncios Airbnb",
+       x = NULL,
+       caption = "") +
+  geom_text(aes(label = airbnb_2018,y = airbnb_2018+45),
+            position = position_dodge(width = 1), hjust = 0, 
+            size=4,color="#777777") +
+  coord_flip()
+
+png(filename="images/airbnb/barras-mariposa-n-y-ratio-airbnb-barrios-donostia-201819.png",width = 900,height = 800)
+grid.arrange(plot2,plot1,ncol=2)
+dev.off()
+
+# -------- Gráfico mariposa ratio anuncios airbnb 2 years--------
 # inspired/copied from https://github.com/meneos/R_Dataviz/blob/master/RENTABILIDAD%20INMUEBLES%20MADRID/rentabilidad_distritos.R
 # library(gridExtra)
 plot1 <- ggplot(n,aes(x = reorder(barrios, Value), y = Value, fill=Year)) + #order by Value or by -pos_ratio2018
@@ -605,7 +721,7 @@ png(filename="images/airbnb/barras-mariposa-n-y-ratio-airbnb-barrios-donostia-20
 grid.arrange(plot2,plot1,ncol=2)
 dev.off()
 
-# Extra calculo diferencia y evolucion
+# Extra calculo diferencia y evolucion 
 por_barrios$airbnb_dif17_18 <- por_barrios$ratio2018 - por_barrios$ratio2017
 por_barrios$airbnb_evol17_18 <- round((por_barrios$ratio2018 - por_barrios$ratio2017)/por_barrios$ratio2017 *100,digits = 2)
 
