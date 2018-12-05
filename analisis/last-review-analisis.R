@@ -12,7 +12,6 @@ last_review  <- read.delim("data/output/180604_listings-airbnb-donostia_datahipp
 # last_review  <- read.delim("data/output/180618_listings_airbnb-bilbao_datahippo_with-last-review-20180912.csv",sep = ",")
 # last_review  <- read.delim("data/output/180618_listings_airbnb-bilbao_datahippo_with-last-review-20180912-reviewed.csv",sep = ",")
 
-
 # Create 
 results <- data.frame(matrix(ncol = 4 ))
 colnames(results) <- c("listings_total","con_fechas_disponibles","found_url","last_review_since")
