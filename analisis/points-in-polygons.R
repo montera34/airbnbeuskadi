@@ -24,7 +24,9 @@ menores <- readOGR("data/output/limites/unidades-menores-donostia_cleaned-merged
 # airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301.csv",sep = ",")
 # airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_WGS84.csv",sep = ",")
 # airbnb <- read.delim("data/output/vut-donostia/censo-viviendas-turisticas-donostia-20180914-wgs84.csv",sep = ",")
-airbnb <- read.delim("data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed.csv",sep = ",")
+# airbnb <- read.delim("data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed.csv",sep = ",")
+# airbnb <- read.delim("data/output/temp/180926_listings-airbnb_donostia_datahippo_with-last-review-20181127-reviewed_active-filtered.csv",sep = ",")
+airbnb <- data_long
 
 ## Get long and lat from your data.frame. Make sure that the order is in lon/lat.
 # source: https://stackoverflow.com/questions/29736577/how-to-convert-data-frame-to-spatial-coordinates#29736844
@@ -81,4 +83,5 @@ length(airbnb[is.na(airbnbSp$barrio),]$name)
 # write.csv(airbnb, file = "data/output/180423_listings-airbnb-donostia_datahippo_barrio-umenor.csv", row.names = FALSE)
 # write.csv(airbnb, file = "data/output/vut-donostia/censo-viviendas-turisticas-donostia-180301_barrio-umenor.csv", row.names = FALSE)
 # write.csv(airbnb, file = "data/output/vut-donostia/censo-viviendas-turisticas-donostia-20180914_barrio-umenor.csv", row.names = FALSE)
-write.csv(airbnb, file = "data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed_barrio-umenor.csv", row.names = FALSE)
+# write.csv(airbnb, file = "data/output/180604_listings-airbnb-donostia_datahippo_with-last-review-20180912-reviewed_barrio-umenor.csv", row.names = FALSE)
+write.csv(airbnb, file = "tmp/listings-evolution.csv", row.names = FALSE)
