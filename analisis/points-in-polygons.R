@@ -28,6 +28,9 @@ menores <- readOGR("data/output/limites/unidades-menores-donostia_cleaned-merged
 # airbnb <- read.delim("data/output/temp/180926_listings-airbnb_donostia_datahippo_with-last-review-20181127-reviewed_active-filtered.csv",sep = ",")
 airbnb <- data_long
 
+airbnb$latitude <- as.numeric(airbnb$latitude)
+airbnb$longitude <- as.numeric(airbnb$longitude)
+
 ## Get long and lat from your data.frame. Make sure that the order is in lon/lat.
 # source: https://stackoverflow.com/questions/29736577/how-to-convert-data-frame-to-spatial-coordinates#29736844
 xy <- airbnb[,c("longitude","latitude")]

@@ -13,6 +13,12 @@
 # - en analisis/evolucion-donostia.R para analizar Donostia
 # Para analizar por barrios y unidades menores en Donostia se ha detectado en cual está cada punto con el script points-in-polygons.R
 
+# Pasos a dar:
+#  1. Correr este script para obtener un data_long con todos los listings de Euskadi y su fecha de scraping
+#  2. Pasar el data.frame data_long por points-in-polygons.R para añadir a cada listing la ubicación de barrio y unidad menor de cada listing
+#  3. Salvar 2 data_long: uno para todos los listings (data_long_euskadi) y otro para los de Donostia (data_long_donostia)
+#  4. El archivo data_long_donostia se usará en otros scripts de /analisis/
+
 # 0. Load settings ------
 # local_name <- "Donostia - San Sebastián"
 # local_basic <- "donostia"
@@ -40,9 +46,6 @@ library(ggrepel) # for geom_text_repel to prevent overlapping
 # Loads dates with listings data
 dates <- c("2019-06-30","2019-05-29","2019-04-29", "2019-03-30","2019-02-19","2019-01-30",
            "2018-12-22","2018-11-26", "2018-10-20","2018-09-27","2018-08-28","2018-07-31","2018-04-21","2017-03-24")
-# "2017-03-00"
-
-# dates <- c("2018-11-26", "2018-10-20","2018-09-27","2018-08-28","2018-07-31","2018-04-21")
 
 dates <- rev(dates)
 
@@ -57,7 +60,9 @@ for (i in 1:length(dates)) {
   #               id,room_type,calculated_host_listings_count,neighbourhood,neighbourhood_group,number_of_reviews,availability_365)
   # full data
   neo <- select(as.data.frame(read.delim(paste("data/original/euskadi/insideairbnb/",dates[i],"/data/listings.csv.gz",sep=""),sep = ",")),
-  id,license,room_type,calculated_host_listings_count,neighbourhood,neighbourhood_cleansed,neighbourhood_group_cleansed,number_of_reviews,availability_365,latitude,longitude)
+  id,license,room_type,calculated_host_listings_count,neighbourhood,neighbourhood_cleansed,neighbourhood_group_cleansed,number_of_reviews,availability_365,
+  host_id,host_name,accommodates,host_picture_url,host_url,
+  latitude,longitude)
 neo$date <- paste(dates[i],sep="")
 todos <- rbind(todos,neo)
 }
@@ -139,7 +144,9 @@ data_long[data_long$room_type == "Habitación compartida", ]$room_type.s <- "Hab
 save(data_long,file="tmp/insideairbnb_long.Rda")
 # write.csv(airbnb, file = "data/output/airbnb/180619_listings-airbnb-provincia-barcelona_datahippo_municipio.csv", row.names = FALSE)
 
+# ----------------important.
 # inserts barrio in Donostia with te points-in-polygons.R script (*variables $barrio and $umenor)
+# re-writes airbnb on data_long
 data_long <- airbnb
 
 # saves data with dosnotia barrio location in other variable
@@ -152,6 +159,7 @@ data_long_euskadi <- data_long
 
 # stores data for Donostia in new data frame to be userd in evolucion_donostia.R
 data_long_donostia <- data_long[ !is.na(data_long$barrio),]
+save(data_long_donostia,file="tmp/insideairbnb_long_donostia.Rda")
 
 # Updates data_long to have euskadi data
 data_long <- data_long_euskadi
